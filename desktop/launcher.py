@@ -1,11 +1,5 @@
 """
 Lanzador de Lab Clínico - Modo Escritorio
-
-Uso:
-    python desktop/launcher.py                     → ventana nativa (1 PC)
-    python desktop/launcher.py --lan               → ventana + acceso desde otras PCs
-    python desktop/launcher.py --sin-ventana       → solo servidor (abres navegador tú)
-    python desktop/launcher.py --puerto 8010       → puerto personalizado
 """
 import argparse
 import os
@@ -13,19 +7,23 @@ import socket
 import sys
 import threading
 
+FROZEN = getattr(sys, "frozen", False)
 
-def base_path():
-    # Empaquetado con PyInstaller → carpeta del .exe
-    if getattr(sys, "frozen", False):
+
+def exe_dir():
+    if FROZEN:
         return os.path.dirname(sys.executable)
-    # Desarrollo → raíz del proyecto
     return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
-BASE = base_path()
+EXE_DIR = exe_dir()
 
-# CRÍTICO: Agregar la raíz al path de Python ANTES de importar Django
-sys.path.insert(0, BASE)
+# CRÍTICO: en el exe, el código vive dentro del bundle (_internal).
+# En desarrollo, en la raíz del proyecto.
+if FROZEN:
+    sys.path.insert(0, getattr(sys, "_MEIPASS", EXE_DIR))
+else:
+    sys.path.insert(0, EXE_DIR)
 
 parser = argparse.ArgumentParser(description="Lab Clínico - Modo Escritorio")
 parser.add_argument("--lan", action="store_true",
@@ -35,21 +33,28 @@ parser.add_argument("--sin-ventana", action="store_true",
                     help="Correr solo el servidor, sin ventana nativa")
 args = parser.parse_args()
 
-# Modo escritorio ANTES de importar Django
+# Datos en carpeta ESCRIBIBLE (Program Files no lo es):
+# instalado → C:\Users\<usuario>\LabClinico ; desarrollo → raíz del proyecto
+if FROZEN:
+    data_base = os.environ.get(
+        "LABCLIN_DATA",
+        os.path.join(os.path.expanduser("~"), "LabClinico"),
+    )
+else:
+    data_base = EXE_DIR
+
 os.environ["LABCLIN_MODO"] = "escritorio"
-os.environ["LABCLIN_BASE"] = BASE
+os.environ["LABCLIN_BASE"] = data_base
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
 
 import django
 
 django.setup()
 
-# Migraciones automáticas al abrir (crea/actualiza la BD sin tocar nada)
 from django.core.management import call_command
 
 call_command("migrate", interactive=False, verbosity=0)
 
-# Servidor embebido (Waitress) en un hilo
 host = "0.0.0.0" if args.lan else "127.0.0.1"
 
 from waitress import serve
@@ -81,7 +86,6 @@ if args.sin_ventana:
     while True:
         time.sleep(3600)
 
-# Ventana nativa de escritorio
 import webview
 
 webview.create_window(

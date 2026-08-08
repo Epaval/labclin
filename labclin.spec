@@ -1,13 +1,8 @@
 # -*- mode: python ; coding: utf-8 -*-
 from PyInstaller.utils.hooks import collect_submodules, collect_data_files
-import os
-
-block_cipher = None
 
 hiddenimports = (
-    collect_submodules('apps')
-    + collect_submodules('config')
-    + collect_submodules('django.contrib.admin')
+    collect_submodules('django.contrib.admin')
     + collect_submodules('django.contrib.auth')
     + collect_submodules('django.contrib.contenttypes')
     + collect_submodules('django.contrib.sessions')
@@ -38,13 +33,16 @@ hiddenimports = (
 datas = [
     ('templates', 'templates'),
     ('staticfiles', 'staticfiles'),
+    # TU CÓDIGO VA COMO ARCHIVOS (no congelado): se importa en runtime
+    ('apps', 'apps'),
+    ('config', 'config'),
 ]
 datas += collect_data_files('reportlab')
 datas += collect_data_files('xhtml2pdf')
 
 a = Analysis(
     ['desktop/launcher.py'],
-    pathex=['.'],  # ← AGREGAR LA RAÍZ DEL PROYECTO AL PATH
+    pathex=['.'],
     binaries=[],
     datas=datas,
     hiddenimports=hiddenimports,
