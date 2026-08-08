@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden animate-fade-in">
+
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 px-6 py-5 border-b border-slate-200">
+    <div>
+      <h1 class="text-xl font-bold text-slate-900 tracking-tight">Órdenes de laboratorio</h1>
+      <p class="text-sm text-slate-500 mt-0.5">{{ page_obj.paginator.count }} orden(es)</p>
+    </div>
+
+    {% if perms.patients.crear_orden_lab %}
+      <a href="{% url 'patients:orden_create' %}"
+         class="inline-flex items-center gap-2 bg-sky-500 hover:bg-sky-600 text-white text-sm font-semibold px-4 py-2.5 rounded-lg shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        Nueva orden
+      </a>
+    {% endif %}
+  </div>
+
+  <div class="overflow-x-auto">
+    <table class="w-full text-left">
+      <thead class="bg-slate-50">
+        <tr>
+          <th class="px-6 py-3.5 text-[11px] font-semibold uppercase tracking-wider text-slate-500">Orden</th>
+          <th class="px-6 py-3.5 text-[11px] font-semibold uppercase tracking-wider text-slate-500">Paciente</th>
+          <th class="px-6 py-3.5 text-[11px] font-semibold uppercase tracking-wider text-slate-500">Exámenes</th>
+          <th class="px-6 py-3.5 text-[11px] font-semibold uppercase tracking-wider text-slate-500">Fecha</th>
+          <th class="px-6 py-3.5 text-[11px] font-semibold uppercase tracking-wider text-slate-500"></th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100">
+        {% for exp in object_list %}
+          <tr class="hover:bg-slate-50/80 transition-colors">
+            <td class="px-6 py-4 text-sm font-bold text-sky-600">#{{ exp.pk }}</td>
+            <td class="px-6 py-4">
+              <div class="text-sm font-medium text-slate-800">{{ exp.paciente.full_name }}</div>
+              <div class="text-xs text-slate-400">CI {{ exp.paciente.ci|default:"-" }}</div>
+            </td>
+            <td class="px-6 py-4 text-sm text-slate-600">{{ exp.resultados.count }}</td>
+            <td class="px-6 py-4 text-sm text-slate-500">{{ exp.fecha_creacion|date:"d/m/Y H:i" }}</td>
+            <td class="px-6 py-4 text-right">
+              <a href="{% url 'patients:orden_detail' exp.pk %}"
+                 class="inline-flex items-center gap-1.5 text-sm font-medium text-sky-600 hover:text-sky-800 hover:bg-sky-50 px-3 py-1.5 rounded-lg transition-colors">
+                Ver / Cargar
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="9 18 15 12 9 6"/>
+                </svg>
+              </a>
+            </td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="5" class="px-6 py-16 text-center text-sm text-slate-400">
+              No hay órdenes registradas todavía
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if is_paginated %}
+    <div class="flex items-center justify-center gap-3 px-6 py-4 border-t border-slate-200 bg-slate-50/60">
+      {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}" class="text-sm font-medium text-slate-600 hover:bg-slate-100 px-3 py-1.5 rounded-lg">← Anterior</a>
+      {% endif %}
+      <span class="text-sm text-slate-500">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+      {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}" class="text-sm font-medium text-slate-600 hover:bg-slate-100 px-3 py-1.5 rounded-lg">Siguiente →</a>
+      {% endif %}
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

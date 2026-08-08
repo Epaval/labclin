@@ -1,0 +1,92 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  @page {
+    size: letter;
+    margin: 2cm;
+  }
+  body {
+    font-family: Helvetica, Arial, sans-serif;
+    font-size: 10px;
+    color: #1e293b;
+  }
+  h1 { font-size: 17px; color: #0f172a; }
+  h2 { font-size: 12px; color: #0369a1; margin-top: 18px; }
+  table { width: 100%; border-collapse: collapse; margin-top: 6px; }
+  th, td { border: 1px solid #cbd5e1; padding: 5px 7px; text-align: left; vertical-align: top; }
+  th { background-color: #f1f5f9; font-size: 9px; text-transform: uppercase; }
+  .cabecera { width: 100%; border: none; }
+  .cabecera td { border: none; padding: 0; }
+  .titulo-lab { font-size: 18px; font-weight: bold; color: #0369a1; }
+  .sub { color: #64748b; font-size: 9px; }
+  .datos { background-color: #f8fafc; }
+  .pie { margin-top: 24px; font-size: 8px; color: #94a3b8; }
+  .pendiente { color: #b45309; font-style: italic; }
+</style>
+</head>
+<body>
+
+  <!-- Encabezado -->
+  <table class="cabecera">
+    <tr>
+      <td>
+        <div class="titulo-lab">LAB CLÍNICO</div>
+        <div class="sub">Sistema Integral de Laboratorio · Reporte de resultados</div>
+      </td>
+      <td style="text-align:right;">
+        <div class="sub">Fecha de emisión:<br><strong>{{ fecha_generacion|date:"d/m/Y H:i" }}</strong></div>
+      </td>
+    </tr>
+  </table>
+
+  <hr>
+
+  <!-- Datos del paciente -->
+  <table>
+    <tr class="datos">
+      <td><strong>Paciente:</strong> {{ paciente.full_name }}</td>
+      <td><strong>CI:</strong> {{ paciente.ci|default:"-" }}</td>
+    </tr>
+    <tr class="datos">
+      <td><strong>Edad:</strong> {{ paciente.edad }} años · {{ paciente.get_sexo_display }}</td>
+      <td><strong>Teléfono:</strong> {{ paciente.telefono|default:"-" }}</td>
+    </tr>
+  </table>
+
+  <!-- Órdenes y resultados -->
+  {% for exp in expedientes %}
+    <h2>Orden #{{ exp.pk }} — {{ exp.fecha_creacion|date:"d/m/Y" }}</h2>
+    <table>
+      <tr>
+        <th style="width:30%;">Examen</th>
+        <th style="width:22%;">Resultado</th>
+        <th style="width:34%;">Valores de referencia</th>
+        <th style="width:14%;">Estado</th>
+      </tr>
+      {% for r in exp.resultados.all %}
+        <tr>
+          <td>{{ r.examen.nombre_completo }}</td>
+          <td>
+            {% if r.tiene_resultado %}
+              <strong>{{ r.resultado_texto }}</strong>
+            {% else %}
+              <span class="pendiente">Pendiente</span>
+            {% endif %}
+          </td>
+          <td>{{ r.examen.valores_ref }}</td>
+          <td>{% if r.estado == 'borrador' %}Pendiente{% else %}{{ r.get_estado_display }}{% endif %}</td>
+        </tr>
+      {% endfor %}
+    </table>
+  {% empty %}
+    <p style="margin-top:16px;">El paciente no tiene órdenes registradas.</p>
+  {% endfor %}
+
+  <p class="pie">
+    Este documento es confidencial y fue generado electrónicamente por el Sistema de Laboratorio Clínico.
+    Los resultados deben ser interpretados por un profesional de la salud.
+  </p>
+</body>
+</html>

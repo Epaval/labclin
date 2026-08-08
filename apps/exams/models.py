@@ -1,0 +1,69 @@
+from django.db import models
+from django.db.models import Q, UniqueConstraint
+from django.db.models.functions import Lower
+
+
+class Examen(models.Model):
+    nombre_completo = models.CharField(max_length=255)
+    valores_ref = models.TextField(blank=True)
+    perfil = models.CharField(max_length=120, blank=True)
+
+    activo = models.BooleanField(default=True)
+
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+    ultima_fecha_act = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "examen"
+        constraints = [
+            UniqueConstraint(
+                Lower("nombre_completo"),
+                name="examen_nombre_lower_unique",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["nombre_completo"]),
+            models.Index(fields=["perfil"]),
+        ]
+
+    def __str__(self):
+        return self.nombre_completo
+
+    @property
+    def costo_actual(self):
+        return self.costos.filter(activo=True).order_by("-ultima_fecha_act").first()
+
+
+class CostoExamen(models.Model):
+    examen = models.ForeignKey(
+        Examen,
+        on_delete=models.PROTECT,
+        related_name="costos",
+    )
+    precio = models.DecimalField(max_digits=10, decimal_places=2)
+    activo = models.BooleanField(default=True)
+
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+    ultima_fecha_act = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "costo_examen"
+        constraints = [
+            UniqueConstraint(
+                fields=["examen"],
+                condition=Q(activo=True),
+                name="uniq_costo_activo_por_examen",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.examen} - {self.precio}"
+
+    def save(self, *args, **kwargs):
+        if self.activo:
+            CostoExamen.objects.filter(
+                examen=self.examen,
+                activo=True,
+            ).exclude(pk=self.pk).update(activo=False)
+
+        super().save(*args, **kwargs)

@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="mb-6 animate-fade-in">
+  <a href="{% url 'patients:list' %}" class="text-sm font-medium text-sky-600 hover:text-sky-700">
+    ← Volver a pacientes
+  </a>
+</div>
+
+<!-- Ficha del paciente + acciones de reporte -->
+<div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 mb-6">
+  <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
+    <div class="flex items-center gap-4">
+      <div class="w-14 h-14 rounded-2xl bg-sky-100 text-sky-600 flex items-center justify-center text-lg font-bold flex-shrink-0">
+        {{ paciente.nombres|first }}{{ paciente.apellidos|first }}
+      </div>
+      <div>
+        <h1 class="text-xl font-bold text-slate-900 tracking-tight">{{ paciente.full_name }}</h1>
+        <p class="text-sm text-slate-500 mt-0.5">
+          CI {{ paciente.ci|default:"-" }} · {{ paciente.edad }} años · {{ paciente.get_sexo_display }}
+          · {{ paciente.telefono|default:"sin teléfono" }}
+        </p>
+        <p class="text-sm text-slate-500">
+          <span class="font-medium text-slate-700">{{ paciente.email|default:"Sin correo registrado" }}</span>
+        </p>
+      </div>
+    </div>
+
+    <div class="flex flex-wrap items-center gap-3">
+      <a href="{% url 'patients:reporte_pdf' paciente.pk %}" target="_blank"
+         class="inline-flex items-center gap-2 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 text-sm font-semibold px-4 py-2.5 rounded-lg transition-colors">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+        Ver PDF
+      </a>
+
+      {% if perms.results.editar_result %}
+        <form method="post" action="{% url 'patients:reporte_enviar' paciente.pk %}">
+          {% csrf_token %}
+          <button type="submit"
+                  {% if not paciente.email %}disabled title="El paciente no tiene correo"{% endif %}
+                  class="inline-flex items-center gap-2 bg-sky-500 hover:bg-sky-600 disabled:bg-slate-300 disabled:cursor-not-allowed text-white text-sm font-semibold px-4 py-2.5 rounded-lg shadow-sm hover:shadow-lg transition-all">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+            </svg>
+            Enviar PDF al correo
+          </button>
+        </form>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Historial de órdenes -->
+<h2 class="text-base font-bold text-slate-900 mb-4">
+  Historial de órdenes ({{ expedientes|length }})
+</h2>
+
+<div class="space-y-5">
+  {% for exp in expedientes %}
+    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-6 py-4 bg-slate-50/60 border-b border-slate-200">
+        <div class="flex items-center gap-3">
+          <span class="text-sm font-bold text-sky-600">Orden {{ exp.pk }}</span>
+          <span class="text-xs text-slate-400">{{ exp.fecha_creacion|date:"d/m/Y H:i" }}</span>
+        </div>
+        <a href="{% url 'patients:orden_detail' exp.pk %}" class="text-sm font-medium text-sky-600 hover:text-sky-700">
+          Ver orden →
+        </a>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left">
+          <thead>
+            <tr>
+              <th class="px-6 py-3 text-[11px] font-semibold uppercase tracking-wider text-slate-500">Examen</th>
+              <th class="px-6 py-3 text-[11px] font-semibold uppercase tracking-wider text-slate-500">Resultado</th>
+              <th class="px-6 py-3 text-[11px] font-semibold uppercase tracking-wider text-slate-500">Estado</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            {% for r in exp.resultados.all %}
+              <tr>
+                <td class="px-6 py-3 text-sm font-medium text-slate-800">{{ r.examen.nombre_completo }}</td>
+                <td class="px-6 py-3 text-sm">
+                  {% if r.tiene_resultado %}
+                    <span class="font-semibold text-slate-800">{{ r.resultado_texto }}</span>
+                  {% else %}
+                    <span class="text-slate-400 italic">Pendiente</span>
+                  {% endif %}
+                </td>
+                <td class="px-6 py-3">
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold
+                    {% if r.estado == 'borrador' %}bg-amber-100 text-amber-700
+                    {% elif r.estado == 'cargado' %}bg-sky-100 text-sky-700
+                    {% elif r.estado == 'validado' %}bg-violet-100 text-violet-700
+                    {% elif r.estado == 'publicado' %}bg-emerald-100 text-emerald-700
+                    {% else %}bg-red-100 text-red-700{% endif %}">
+                    {% if r.estado == 'borrador' %}Pendiente{% else %}{{ r.get_estado_display }}{% endif %}
+                  </span>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  {% empty %}
+    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm py-16 text-center text-sm text-slate-400">
+      Este paciente aún no tiene órdenes registradas.
+    </div>
+  {% endfor %}
+</div>
+{% endblock %}

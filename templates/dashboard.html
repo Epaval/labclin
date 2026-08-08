@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="mb-8">
+  <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Panel principal</h1>
+  <p class="text-sm text-slate-500 mt-1">
+    Bienvenido(a), {{ user.full_name }}. Este es el resumen del laboratorio.
+  </p>
+</div>
+
+<!-- Tarjetas de estadísticas -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+
+  <a href="{% url 'patients:list' %}"
+     class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all group">
+    <div class="flex items-center justify-between">
+      <div>
+        <p class="text-sm font-medium text-slate-500">Pacientes</p>
+        <p class="text-3xl font-extrabold text-slate-900 mt-1 tracking-tight">{{ total_pacientes }}</p>
+      </div>
+      <div class="w-12 h-12 rounded-xl bg-sky-100 text-sky-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+          <path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+      </div>
+    </div>
+  </a>
+
+  <a href="{% url 'doctors:list' %}"
+     class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all group">
+    <div class="flex items-center justify-between">
+      <div>
+        <p class="text-sm font-medium text-slate-500">Médicos</p>
+        <p class="text-3xl font-extrabold text-slate-900 mt-1 tracking-tight">{{ total_medicos }}</p>
+      </div>
+      <div class="w-12 h-12 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
+        </svg>
+      </div>
+    </div>
+  </a>
+
+  <a href="{% url 'exams:list' %}"
+     class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all group">
+    <div class="flex items-center justify-between">
+      <div>
+        <p class="text-sm font-medium text-slate-500">Exámenes</p>
+        <p class="text-3xl font-extrabold text-slate-900 mt-1 tracking-tight">{{ total_examenes }}</p>
+      </div>
+      <div class="w-12 h-12 rounded-xl bg-violet-100 text-violet-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10 2v7.31"/><path d="M14 9.3V1.99"/><path d="M8.5 2h7"/><path d="M14 9.3a6.5 6.5 0 1 1-4 0"/>
+        </svg>
+      </div>
+    </div>
+  </a>
+
+  <a href="{% url 'results:list' %}"
+     class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all group">
+    <div class="flex items-center justify-between">
+      <div>
+        <p class="text-sm font-medium text-slate-500">Resultados</p>
+        <p class="text-3xl font-extrabold text-slate-900 mt-1 tracking-tight">{{ total_resultados }}</p>
+      </div>
+      <div class="w-12 h-12 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <path d="M14 2v6h6"/><path d="M9 13h6"/><path d="M9 17h6"/>
+        </svg>
+      </div>
+    </div>
+  </a>
+</div>
+
+<!-- Prueba de correo -->
+{% if perms.results.view_resultado %}
+  <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div class="flex items-center gap-4">
+        <div class="w-12 h-12 rounded-xl bg-sky-100 text-sky-600 flex items-center justify-center flex-shrink-0">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="4" width="20" height="16" rx="2"/>
+            <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+          </svg>
+        </div>
+        <div>
+          <h2 class="text-base font-bold text-slate-900">Prueba de correo</h2>
+          <p class="text-sm text-slate-500 mt-0.5">
+            Envía un correo de prueba a <span class="font-medium text-slate-700">{{ user.email }}</span>
+          </p>
+        </div>
+      </div>
+
+      <form method="post" action="{% url 'results:test_email' %}">
+        {% csrf_token %}
+        <button type="submit"
+                class="inline-flex items-center gap-2 bg-sky-500 hover:bg-sky-600 text-white text-sm font-semibold px-5 py-2.5 rounded-lg shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+          </svg>
+          Enviar correo
+        </button>
+      </form>
+    </div>
+  </div>
+{% endif %}
+{% if modo_escritorio %}
+  <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 mt-5">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div class="flex items-center gap-4">
+        <div class="w-12 h-12 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center flex-shrink-0">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <ellipse cx="12" cy="5" rx="9" ry="3"/>
+            <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
+            <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+          </svg>
+        </div>
+        <div>
+          <h2 class="text-base font-bold text-slate-900">Copia de seguridad</h2>
+          <p class="text-sm text-slate-500 mt-0.5">
+            Descarga un respaldo completo de la base de datos (guárdalo en una USB)
+          </p>
+        </div>
+      </div>
+      <a href="{% url 'backup' %}"
+         class="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold px-5 py-2.5 rounded-lg shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+        Crear respaldo
+      </a>
+    </div>
+  </div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="mb-6 animate-fade-in">
+  <a href="{% url 'patients:orden_list' %}" class="text-sm font-medium text-sky-600 hover:text-sky-700">
+    ← Volver a órdenes
+  </a>
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-2">
+    <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Orden {{ expediente.pk }}</h1>
+    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide
+      {% if expediente.estado == 'abierto' %}bg-sky-100 text-sky-700
+      {% elif expediente.estado == 'procesando' %}bg-amber-100 text-amber-700
+      {% elif expediente.estado == 'cerrado' %}bg-emerald-100 text-emerald-700
+      {% else %}bg-red-100 text-red-700{% endif %}">
+      {{ expediente.get_estado_display }}
+    </span>
+  </div>
+</div>
+
+<!-- Información del paciente + progreso -->
+<div class="grid lg:grid-cols-3 gap-5 mb-6">
+  <div class="lg:col-span-2 bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+    <div class="flex items-center gap-4">
+      <div class="w-14 h-14 rounded-2xl bg-sky-100 text-sky-600 flex items-center justify-center text-lg font-bold flex-shrink-0">
+        {{ expediente.paciente.nombres|first }}{{ expediente.paciente.apellidos|first }}
+      </div>
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 w-full">
+        <div>
+          <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Paciente</p>
+          <p class="text-sm font-semibold text-slate-800">{{ expediente.paciente.full_name }}</p>
+        </div>
+        <div>
+          <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-400">CI</p>
+          <p class="text-sm font-medium text-slate-700">{{ expediente.paciente.ci|default:"-" }}</p>
+        </div>
+        <div>
+          <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Edad</p>
+          <p class="text-sm font-medium text-slate-700">{{ expediente.paciente.edad }} años</p>
+        </div>
+        <div>
+          <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Sexo</p>
+          <p class="text-sm font-medium text-slate-700">{{ expediente.paciente.get_sexo_display }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+    <div class="flex items-center justify-between mb-2">
+      <p class="text-sm font-semibold text-slate-700">Progreso</p>
+      <p class="text-sm font-bold text-sky-600">{{ examenes_cargados }}/{{ total_examenes }}</p>
+    </div>
+    <div class="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden">
+      <div class="h-full bg-gradient-to-r from-sky-500 to-emerald-500 rounded-full transition-all duration-500"
+           style="width: {{ progreso }}%"></div>
+    </div>
+    <p class="text-xs text-slate-400 mt-2">
+      Creada el {{ expediente.fecha_creacion|date:"d/m/Y H:i" }} por {{ expediente.creado_por.full_name }}
+    </p>
+  </div>
+</div>
+<!-- Facturación -->
+<div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 mb-6">
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    {% if factura %}
+      <div class="flex items-center gap-4">
+        <div class="w-12 h-12 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center flex-shrink-0">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/>
+            <path d="M8 7h8"/><path d="M8 11h8"/><path d="M8 15h5"/>
+          </svg>
+        </div>
+        <div>
+          <p class="text-sm font-bold text-slate-900">Factura {{ factura.numero }}</p>
+          <p class="text-xs text-slate-500">
+            Total ${{ factura.total }} · {{ factura.get_estado_display }}
+          </p>
+        </div>
+      </div>
+      <a href="{% url 'billing:detail' factura.pk %}"
+         class="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold px-4 py-2.5 rounded-lg shadow-sm transition-all">
+        Ver factura →
+      </a>
+    {% else %}
+      <div class="flex items-center gap-4">
+        <div class="w-12 h-12 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center flex-shrink-0">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/>
+            <path d="M8 7h8"/><path d="M8 11h8"/><path d="M8 15h5"/>
+          </svg>
+        </div>
+        <div>
+          <p class="text-sm font-bold text-slate-900">Facturación</p>
+          <p class="text-xs text-slate-500">
+            {{ examenes_realizados }} examen(es) realizado(s) listo(s) para facturar
+          </p>
+        </div>
+      </div>
+      {% if perms.billing.add_factura %}
+        <form method="post" action="{% url 'billing:crear_desde_orden' expediente.pk %}">
+          {% csrf_token %}
+          <button type="submit"
+                  {% if examenes_realizados == 0 %}disabled{% endif %}
+                  class="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 disabled:bg-slate-300 disabled:cursor-not-allowed text-white text-sm font-semibold px-4 py-2.5 rounded-lg shadow-sm transition-all">
+            Generar factura
+          </button>
+        </form>
+      {% endif %}
+    {% endif %}
+  </div>
+</div>
+
+<!-- Tabla de resultados -->
+<div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+  <div class="px-6 py-5 border-b border-slate-200">
+    <h2 class="text-base font-bold text-slate-900">Exámenes de la orden</h2>
+  </div>
+
+  <div class="overflow-x-auto">
+    <table class="w-full text-left">
+      <thead class="bg-slate-50">
+        <tr>
+          <th class="px-6 py-3.5 text-[11px] font-semibold uppercase tracking-wider text-slate-500">Examen</th>
+          <th class="px-6 py-3.5 text-[11px] font-semibold uppercase tracking-wider text-slate-500">Perfil</th>
+          <th class="px-6 py-3.5 text-[11px] font-semibold uppercase tracking-wider text-slate-500">Resultado</th>
+          <th class="px-6 py-3.5 text-[11px] font-semibold uppercase tracking-wider text-slate-500">Estado</th>
+          <th class="px-6 py-3.5 text-[11px] font-semibold uppercase tracking-wider text-slate-500 text-right">Acción</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100">
+        {% for r in resultados %}
+          <tr class="hover:bg-slate-50/80 transition-colors">
+            <td class="px-6 py-4 text-sm font-medium text-slate-800">{{ r.examen.nombre_completo }}</td>
+            <td class="px-6 py-4 text-sm text-slate-500">{{ r.examen.perfil }}</td>
+            <td class="px-6 py-4">
+              {% if r.tiene_resultado %}
+                <span class="text-sm font-semibold text-slate-800">
+                  {{ r.resultado_texto }}
+                </span>
+              {% else %}
+                <span class="text-sm text-slate-400 italic">Sin resultado</span>
+              {% endif %}
+            </td>
+            <td class="px-6 py-4">
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold
+                {% if r.estado == 'borrador' %}bg-amber-100 text-amber-700
+                {% elif r.estado == 'cargado' %}bg-sky-100 text-sky-700
+                {% elif r.estado == 'validado' %}bg-violet-100 text-violet-700
+                {% elif r.estado == 'publicado' %}bg-emerald-100 text-emerald-700
+                {% else %}bg-red-100 text-red-700{% endif %}">
+                {% if r.estado == 'borrador' %}Pendiente{% else %}{{ r.get_estado_display }}{% endif %}
+              </span>
+            </td>
+            <td class="px-6 py-4 text-right">
+              {% if perms.results.editar_result %}
+                <a href="{% url 'results:update' r.pk %}"
+                   class="inline-flex items-center gap-1.5 text-sm font-semibold
+                     {% if r.estado == 'borrador' %}text-white bg-sky-500 hover:bg-sky-600{% else %}text-sky-600 hover:bg-sky-50{% endif %}
+                     px-3 py-1.5 rounded-lg transition-colors">
+                  {% if r.estado == 'borrador' %}Cargar{% else %}Editar{% endif %}
+                </a>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

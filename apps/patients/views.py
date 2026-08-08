@@ -1,0 +1,201 @@
+from itertools import groupby
+
+from django.contrib import messages
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+from django.db.models import Q
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404, redirect
+from django.urls import reverse_lazy
+from django.views import View
+from django.views.generic import CreateView, DetailView, ListView, UpdateView
+
+from apps.exams.models import Examen
+from apps.results.models import Resultado
+
+from .forms import ExpedienteForm, PacienteForm
+from .models import Expediente, ExpedienteMedico, Paciente
+from .services import enviar_reporte_pdf, generar_pdf_reporte
+
+
+class PacienteListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
+    model = Paciente
+    permission_required = "patients.view_paciente"
+    template_name = "patients/paciente_list.html"
+    context_object_name = "object_list"
+    paginate_by = 6
+
+    def get_queryset(self):
+        qs = Paciente.objects.filter(activo=True).order_by("apellidos", "nombres")
+        q = self.request.GET.get("q", "").strip()
+        if q:
+            for term in q.split():
+                qs = qs.filter(
+                    Q(nombres__unaccent__icontains=term)
+                    | Q(apellidos__unaccent__icontains=term)
+                    | Q(ci__unaccent__icontains=term)
+                    | Q(telefono__unaccent__icontains=term)
+                    | Q(email__unaccent__icontains=term)
+                )
+        return qs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["q"] = self.request.GET.get("q", "").strip()
+        return context
+
+
+class PacienteCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
+    model = Paciente
+    form_class = PacienteForm
+    permission_required = "patients.crear_paciente"
+    template_name = "form.html"
+    success_url = reverse_lazy("patients:list")
+    extra_context = {"title": "Nuevo paciente"}
+
+
+class PacienteUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
+    model = Paciente
+    form_class = PacienteForm
+    permission_required = "patients.change_paciente"
+    template_name = "form.html"
+    success_url = reverse_lazy("patients:list")
+    extra_context = {"title": "Editar paciente"}
+
+
+# ================= HISTORIAL Y REPORTES =================
+
+class PacienteHistorialView(LoginRequiredMixin, PermissionRequiredMixin, DetailView):
+    model = Paciente
+    permission_required = "patients.view_paciente"
+    template_name = "patients/paciente_historial.html"
+    context_object_name = "paciente"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["expedientes"] = (
+            self.object.expedientes.prefetch_related("resultados__examen")
+            .order_by("-fecha_creacion")
+        )
+        return context
+
+
+class PacienteReportePDFView(LoginRequiredMixin, PermissionRequiredMixin, View):
+    permission_required = "patients.view_paciente"
+
+    def get(self, request, pk):
+        paciente = get_object_or_404(Paciente, pk=pk)
+        expedientes = (
+            paciente.expedientes.prefetch_related("resultados__examen")
+            .order_by("-fecha_creacion")
+        )
+
+        pdf = generar_pdf_reporte(paciente, expedientes)
+
+        response = HttpResponse(pdf, content_type="application/pdf")
+        response["Content-Disposition"] = f'inline; filename="reporte_{paciente.pk}.pdf"'
+        return response
+
+
+class EnviarReportePDFView(LoginRequiredMixin, PermissionRequiredMixin, View):
+    permission_required = "results.editar_result"
+
+    def post(self, request, pk):
+        paciente = get_object_or_404(Paciente, pk=pk)
+
+        try:
+            expedientes = (
+                paciente.expedientes.prefetch_related("resultados__examen")
+                .order_by("-fecha_creacion")
+            )
+            enviar_reporte_pdf(paciente, expedientes)
+            messages.success(request, f"Reporte enviado a {paciente.email}")
+        except Exception as exc:
+            messages.error(request, f"No se pudo enviar el reporte: {exc}")
+
+        return redirect("patients:historial", pk=paciente.pk)
+
+
+# ================= ÓRDENES DE LABORATORIO =================
+
+class ExpedienteListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
+    model = Expediente
+    permission_required = "patients.view_expediente"
+    template_name = "patients/expediente_list.html"
+    context_object_name = "object_list"
+    paginate_by = 20
+
+    def get_queryset(self):
+        return (
+            Expediente.objects.select_related("paciente", "creado_por")
+            .order_by("-fecha_creacion")
+        )
+
+
+class ExpedienteCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
+    model = Expediente
+    form_class = ExpedienteForm
+    permission_required = "patients.crear_orden_lab"
+    template_name = "patients/expediente_form.html"
+    extra_context = {"title": "Nueva orden de laboratorio"}
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        examenes = (
+            Examen.objects.filter(activo=True)
+            .order_by("perfil", "nombre_completo")
+        )
+        perfiles = []
+        for perfil, items in groupby(examenes, key=lambda e: e.perfil or "General"):
+            perfiles.append({"nombre": perfil, "examenes": list(items)})
+        context["perfiles"] = perfiles
+        return context
+
+    def form_valid(self, form):
+        form.instance.creado_por = self.request.user
+        response = super().form_valid(form)
+
+        examenes = form.cleaned_data["examenes"]
+        for examen in examenes:
+            Resultado.objects.get_or_create(
+                expediente=self.object,
+                examen=examen,
+                defaults={"estado": "borrador", "creado_por": self.request.user},
+            )
+        for medico in form.cleaned_data["medicos"]:
+            ExpedienteMedico.objects.get_or_create(
+                expediente=self.object, medico=medico
+            )
+
+        messages.success(
+            self.request,
+            f"Orden #{self.object.pk} creada con {examenes.count()} examen(es) pendiente(s)",
+        )
+        return response
+
+    def get_success_url(self):
+        return reverse_lazy("patients:orden_detail", kwargs={"pk": self.object.pk})
+
+
+class ExpedienteDetailView(LoginRequiredMixin, PermissionRequiredMixin, DetailView):
+    model = Expediente
+    permission_required = "patients.view_expediente"
+    template_name = "patients/expediente_detail.html"
+    context_object_name = "expediente"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        resultados = (
+            self.object.resultados.select_related("examen", "creado_por")
+            .order_by("examen__perfil", "examen__nombre_completo")
+        )
+        total = resultados.count()
+        cargados = resultados.exclude(estado="borrador").exclude(estado="anulado").count()
+        context["resultados"] = resultados
+        context["total_examenes"] = total
+        context["examenes_cargados"] = cargados
+        context["progreso"] = int((cargados / total) * 100) if total else 0
+        context["factura"] = self.object.facturas.exclude(estado="anulada").first()
+        context["examenes_realizados"] = (
+            self.object.resultados.exclude(estado="borrador").exclude(estado="anulado").count()
+        )
+        return context
