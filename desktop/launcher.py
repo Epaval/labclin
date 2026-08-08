@@ -24,6 +24,9 @@ def base_path():
 
 BASE = base_path()
 
+# CRÍTICO: Agregar la raíz al path de Python ANTES de importar Django
+sys.path.insert(0, BASE)
+
 parser = argparse.ArgumentParser(description="Lab Clínico - Modo Escritorio")
 parser.add_argument("--lan", action="store_true",
                     help="Permitir conexiones de otras PCs de la red local")
@@ -36,8 +39,6 @@ args = parser.parse_args()
 os.environ["LABCLIN_MODO"] = "escritorio"
 os.environ["LABCLIN_BASE"] = BASE
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
-
-sys.path.insert(0, BASE)
 
 import django
 

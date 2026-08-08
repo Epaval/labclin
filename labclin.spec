@@ -1,5 +1,8 @@
 # -*- mode: python ; coding: utf-8 -*-
 from PyInstaller.utils.hooks import collect_submodules, collect_data_files
+import os
+
+block_cipher = None
 
 hiddenimports = (
     collect_submodules('apps')
@@ -41,7 +44,7 @@ datas += collect_data_files('xhtml2pdf')
 
 a = Analysis(
     ['desktop/launcher.py'],
-    pathex=[],
+    pathex=['.'],  # ← AGREGAR LA RAÍZ DEL PROYECTO AL PATH
     binaries=[],
     datas=datas,
     hiddenimports=hiddenimports,
@@ -70,7 +73,6 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    # icon='icono.ico',
 )
 
 coll = COLLECT(
