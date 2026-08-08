@@ -3,12 +3,13 @@ from apps.core.views_activacion import ActivacionView
 from django.contrib import admin
 from django.urls import include, path
 
-from apps.accounts.views import DashboardView
+from apps.accounts.views import ConfiguracionInicialView, DashboardView
 from . import views as error_views
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("", DashboardView.as_view(), name="dashboard"),
+    path("configuracion-inicial/", ConfiguracionInicialView.as_view(), name="configuracion_inicial"),
     path("respaldo/", BackupView.as_view(), name="backup"),
     path("activacion/", ActivacionView.as_view(), name="activacion"),
     path("accounts/", include("apps.accounts.urls")),

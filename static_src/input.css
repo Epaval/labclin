@@ -217,3 +217,34 @@ form ul:not(.errorlist) li label {
   margin: 0;
   cursor: pointer;
 }
+
+/* Sidebar links */
+.sidebar-link {
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  color: #475569;
+  transition: all 0.15s;
+  text-decoration: none;
+}
+
+.sidebar-link:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.sidebar-link.active {
+  background: linear-gradient(135deg, rgb(14 165 233 / 0.1), rgb(16 185 129 / 0.1));
+  color: #0369a1;
+  font-weight: 600;
+}
+
+.sidebar-link.active svg {
+  color: #0ea5e9;
+}
+
+/* Avatar pequeño */
+.avatar-sm {
+  width: 32px;
+  height: 32px;
+  font-size: 0.75rem;
+}

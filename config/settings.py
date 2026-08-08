@@ -92,6 +92,7 @@ MIDDLEWARE = [
     "simple_history.middleware.HistoryRequestMiddleware",
     "axes.middleware.AxesMiddleware",
     "apps.core.middleware.LicenciaMiddleware",
+    "apps.core.middleware.ConfiguracionInicialMiddleware",
 ]
 
 ROOT_URLCONF = "config.urls"
