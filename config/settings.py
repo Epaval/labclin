@@ -263,3 +263,27 @@ if TESTING:
     CELERY_TASK_ALWAYS_EAGER = True
     CELERY_TASK_EAGER_PROPAGATES = True
     PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
+
+
+# ===== Logging a archivo en modo escritorio (diagnóstico) =====
+if ESCRITORIO:
+    LOGGING["formatters"] = {
+        "verbose": {
+            "format": "{asctime} {levelname} {name} {message}",
+            "style": "{",
+        },
+    }
+    LOGGING["handlers"]["file"] = {
+        "class": "logging.FileHandler",
+        "filename": str(DATA_DIR / "labclin.log"),
+        "formatter": "verbose",
+        "encoding": "utf-8",
+    }
+    LOGGING["root"]["handlers"].append("file")
+    LOGGING["loggers"] = {
+        "django.request": {
+            "handlers": ["file"],
+            "level": "ERROR",
+            "propagate": False,
+        },
+    }

@@ -1,11 +1,12 @@
 """
-Lanzador de Lab Clínico - Modo Escritorio
+Lanzador de Lab Clínico - Modo Escritorio (con diagnóstico de errores)
 """
 import argparse
 import os
 import socket
 import sys
 import threading
+import traceback
 
 FROZEN = getattr(sys, "frozen", False)
 
@@ -18,81 +19,110 @@ def exe_dir():
 
 EXE_DIR = exe_dir()
 
-# CRÍTICO: en el exe, el código vive dentro del bundle (_internal).
-# En desarrollo, en la raíz del proyecto.
+# Carpeta de datos (escribible)
 if FROZEN:
-    sys.path.insert(0, getattr(sys, "_MEIPASS", EXE_DIR))
-else:
-    sys.path.insert(0, EXE_DIR)
-
-parser = argparse.ArgumentParser(description="Lab Clínico - Modo Escritorio")
-parser.add_argument("--lan", action="store_true",
-                    help="Permitir conexiones de otras PCs de la red local")
-parser.add_argument("--puerto", type=int, default=8000)
-parser.add_argument("--sin-ventana", action="store_true",
-                    help="Correr solo el servidor, sin ventana nativa")
-args = parser.parse_args()
-
-# Datos en carpeta ESCRIBIBLE (Program Files no lo es):
-# instalado → C:\Users\<usuario>\LabClinico ; desarrollo → raíz del proyecto
-if FROZEN:
-    data_base = os.environ.get(
+    DATA_BASE = os.environ.get(
         "LABCLIN_DATA",
         os.path.join(os.path.expanduser("~"), "LabClinico"),
     )
 else:
-    data_base = EXE_DIR
+    DATA_BASE = EXE_DIR
 
-os.environ["LABCLIN_MODO"] = "escritorio"
-os.environ["LABCLIN_BASE"] = data_base
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
+ERROR_LOG = os.path.join(DATA_BASE, "launcher_error.log")
 
-import django
 
-django.setup()
-
-from django.core.management import call_command
-
-call_command("migrate", interactive=False, verbosity=0)
-
-host = "0.0.0.0" if args.lan else "127.0.0.1"
-
-from waitress import serve
-from django.core.wsgi import get_wsgi_application
-
-threading.Thread(
-    target=serve,
-    kwargs={"app": get_wsgi_application(), "host": host,
-            "port": args.puerto, "threads": 8},
-    daemon=True,
-).start()
-
-url = f"http://127.0.0.1:{args.puerto}"
-
-if args.lan:
+def reportar_error(exc_texto):
+    """Guarda el error en archivo y lo muestra en pantalla"""
     try:
-        ip = socket.gethostbyname(socket.gethostname())
+        os.makedirs(DATA_BASE, exist_ok=True)
+        with open(ERROR_LOG, "a", encoding="utf-8") as f:
+            f.write("=" * 60 + "\n")
+            f.write(exc_texto + "\n")
     except Exception:
-        ip = "TU_IP"
-    print("=" * 60)
-    print("  Lab Clínico está disponible en la red local:")
-    print(f"  → Esta PC:      {url}")
-    print(f"  → Otras PCs:    http://{ip}:{args.puerto}")
-    print("=" * 60)
+        pass
 
-if args.sin_ventana:
-    print(f"Servidor activo en {url}  (Ctrl+C para salir)")
-    import time
-    while True:
-        time.sleep(3600)
+    # Mostrar en consola si existe
+    print(exc_texto, file=sys.stderr)
 
-import webview
+    # Mostrar cuadro de diálogo en Windows
+    try:
+        import ctypes
+        ctypes.windll.user32.MessageBoxW(
+            0,
+            f"Error al iniciar Lab Clínico:\n\n{exc_texto[:800]}\n\n"
+            f"Detalle completo en:\n{ERROR_LOG}",
+            "Lab Clínico - Error",
+            0x10,
+        )
+    except Exception:
+        pass
 
-webview.create_window(
-    "Lab Clínico",
-    url,
-    width=1360,
-    height=860,
-    min_size=(1024, 700),
-)
-webview.start()
+
+def main():
+    # Path de código: bundle (_internal) en el exe, raíz del proyecto en dev
+    if FROZEN:
+        sys.path.insert(0, getattr(sys, "_MEIPASS", EXE_DIR))
+    else:
+        sys.path.insert(0, EXE_DIR)
+
+    parser = argparse.ArgumentParser(description="Lab Clínico - Modo Escritorio")
+    parser.add_argument("--lan", action="store_true")
+    parser.add_argument("--puerto", type=int, default=8000)
+    parser.add_argument("--sin-ventana", action="store_true")
+    args = parser.parse_args()
+
+    os.environ["LABCLIN_MODO"] = "escritorio"
+    os.environ["LABCLIN_BASE"] = DATA_BASE
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
+
+    import django
+    django.setup()
+
+    from django.core.management import call_command
+    call_command("migrate", interactive=False, verbosity=0)
+
+    host = "0.0.0.0" if args.lan else "127.0.0.1"
+
+    from waitress import serve
+    from django.core.wsgi import get_wsgi_application
+
+    threading.Thread(
+        target=serve,
+        kwargs={"app": get_wsgi_application(), "host": host,
+                "port": args.puerto, "threads": 8},
+        daemon=True,
+    ).start()
+
+    url = f"http://127.0.0.1:{args.puerto}"
+
+    if args.lan:
+        try:
+            ip = socket.gethostbyname(socket.gethostname())
+        except Exception:
+            ip = "TU_IP"
+        print("=" * 60)
+        print("  Lab Clínico disponible en la red local:")
+        print(f"  → Esta PC:   {url}")
+        print(f"  → Otras PCs: http://{ip}:{args.puerto}")
+        print("=" * 60)
+
+    if args.sin_ventana:
+        print(f"Servidor activo en {url}  (Ctrl+C para salir)")
+        import time
+        while True:
+            time.sleep(3600)
+
+    import webview
+    webview.create_window(
+        "Lab Clínico", url,
+        width=1360, height=860, min_size=(1024, 700),
+    )
+    webview.start()
+
+
+if __name__ == "__main__":
+    try:
+        main()
+    except Exception:
+        reportar_error(traceback.format_exc())
+        sys.exit(1)
