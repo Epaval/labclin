@@ -19,6 +19,13 @@ class Factura(models.Model):
     ]
 
     numero = models.CharField(max_length=20, unique=True)
+    numero_control = models.CharField(
+        "Número de control",
+        max_length=10,
+        unique=True,
+        blank=True,
+        help_text="Formato fiscal: 00-NNNNN (auto-generado)",
+    )
 
     expediente = models.ForeignKey(
         "patients.Expediente",
