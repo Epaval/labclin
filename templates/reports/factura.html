@@ -46,10 +46,11 @@
       <td style="text-align:right; vertical-align:top;">
         <div class="factura-num">FACTURA</div>
         <div class="factura-num">N° {{ factura.numero }}</div>
-        <div style="margin-top:6px; padding:6px 10px; background-color:#f1f5f9; border:1px solid #cbd5e1; border-radius:4px; display:inline-block; text-align:center;">
-          <div style="font-size:9px; color:#64748b; text-transform:uppercase; letter-spacing:0.5px;">N° Control</div>
-          <div style="font-size:14px; font-weight:bold; color:#0f172a; letter-spacing:1px;">{{ factura.numero_control }}</div>
+        {% if factura.numero_control %}
+        <div style="margin-top:3px; font-size:11px; font-weight:bold; color:#334155; letter-spacing:1px;">
+          N° Control: {{ factura.numero_control }}
         </div>
+        {% endif %}
         <div class="sub" style="margin-top:4px;">
           Fecha: {{ factura.fecha_creacion|date:"d/m/Y H:i" }}<br>
           Estado: {{ factura.get_estado_display }}
