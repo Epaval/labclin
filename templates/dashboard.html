@@ -74,38 +74,6 @@
   </a>
 </div>
 
-<!-- Prueba de correo -->
-{% if perms.results.view_resultado %}
-  <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-      <div class="flex items-center gap-4">
-        <div class="w-12 h-12 rounded-xl bg-sky-100 text-sky-600 flex items-center justify-center flex-shrink-0">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="2" y="4" width="20" height="16" rx="2"/>
-            <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
-          </svg>
-        </div>
-        <div>
-          <h2 class="text-base font-bold text-slate-900">Prueba de correo</h2>
-          <p class="text-sm text-slate-500 mt-0.5">
-            Envía un correo de prueba a <span class="font-medium text-slate-700">{{ user.email }}</span>
-          </p>
-        </div>
-      </div>
-
-      <form method="post" action="{% url 'results:test_email' %}">
-        {% csrf_token %}
-        <button type="submit"
-                class="inline-flex items-center gap-2 bg-sky-500 hover:bg-sky-600 text-white text-sm font-semibold px-5 py-2.5 rounded-lg shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
-          </svg>
-          Enviar correo
-        </button>
-      </form>
-    </div>
-  </div>
-{% endif %}
 {% if modo_escritorio %}
   <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 mt-5">
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
