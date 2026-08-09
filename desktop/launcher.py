@@ -1,5 +1,5 @@
 """
-Lanzador de Lab Clínico - Modo Escritorio (con diagnóstico de errores)
+Lanzador de Lab Clínico - Modo Escritorio
 """
 import argparse
 import os
@@ -10,6 +10,18 @@ import traceback
 
 FROZEN = getattr(sys, "frozen", False)
 
+# CRÍTICO: Forzar UTF-8 en Windows para evitar UnicodeEncodeError
+# Esto resuelve problemas con símbolos como ✓, ✗, etc.
+if sys.platform == "win32":
+    try:
+        # Python 3.7+
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    except (AttributeError, OSError):
+        pass
+    # Variable de entorno para Django/Python
+    os.environ.setdefault("PYTHONIOENCODING", "utf-8")
+
 
 def exe_dir():
     if FROZEN:
@@ -19,7 +31,6 @@ def exe_dir():
 
 EXE_DIR = exe_dir()
 
-# Carpeta de datos (escribible)
 if FROZEN:
     DATA_BASE = os.environ.get(
         "LABCLIN_DATA",
@@ -32,7 +43,6 @@ ERROR_LOG = os.path.join(DATA_BASE, "launcher_error.log")
 
 
 def reportar_error(exc_texto):
-    """Guarda el error en archivo y lo muestra en pantalla"""
     try:
         os.makedirs(DATA_BASE, exist_ok=True)
         with open(ERROR_LOG, "a", encoding="utf-8") as f:
@@ -41,10 +51,8 @@ def reportar_error(exc_texto):
     except Exception:
         pass
 
-    # Mostrar en consola si existe
     print(exc_texto, file=sys.stderr)
 
-    # Mostrar cuadro de diálogo en Windows
     try:
         import ctypes
         ctypes.windll.user32.MessageBoxW(
@@ -59,7 +67,6 @@ def reportar_error(exc_texto):
 
 
 def main():
-    # Path de código: bundle (_internal) en el exe, raíz del proyecto en dev
     if FROZEN:
         sys.path.insert(0, getattr(sys, "_MEIPASS", EXE_DIR))
     else:

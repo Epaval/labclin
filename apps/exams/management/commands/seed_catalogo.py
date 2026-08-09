@@ -212,5 +212,5 @@ class Command(BaseCommand):
 
         total = Examen.objects.count()
         self.stdout.write(self.style.SUCCESS(
-            f"✓ {nuevos} exámenes nuevos. Catálogo total: {total} exámenes"
+            f"[OK] {nuevos} exámenes nuevos. Catálogo total: {total} exámenes"
         ))

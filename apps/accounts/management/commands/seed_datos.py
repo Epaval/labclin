@@ -104,7 +104,7 @@ class Command(BaseCommand):
         self.stdout.write(self.style.NOTICE("Creando empleados..."))
         self._seed_empleados()
 
-        self.stdout.write(self.style.SUCCESS("\n✓ Datos de prueba cargados correctamente"))
+        self.stdout.write(self.style.SUCCESS("\n[OK] Datos de prueba cargados correctamente"))
         self.stdout.write(self.style.WARNING(f"\nContraseña por defecto para empleados: {PASSWORD}"))
         self.stdout.write(self.style.WARNING("Usuarios creados:"))
         self.stdout.write("  jefe_lab1, bio1, bio2, bio3, aux1, aux2")
