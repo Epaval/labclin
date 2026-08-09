@@ -54,3 +54,38 @@ def generar_factura(expediente, usuario, descuento=Decimal("0")):
         factura.save(update_fields=["subtotal", "total"])
 
         return factura
+
+
+# ================= PDF DE FACTURA =================
+
+import io
+
+from django.template.loader import render_to_string
+from django.utils import timezone
+from xhtml2pdf import pisa
+
+from apps.core.models import DatosLaboratorio
+
+
+def generar_pdf_factura(factura):
+    """Genera el PDF de la factura con el encabezado del laboratorio"""
+    lab = DatosLaboratorio.cargar()
+
+    html = render_to_string(
+        "reports/factura.html",
+        {
+            "factura": factura,
+            "paciente": factura.expediente.paciente,
+            "detalles": factura.detalles.select_related("examen").all(),
+            "lab": lab,
+            "fecha_generacion": timezone.now(),
+        },
+    )
+
+    buffer = io.BytesIO()
+    estado = pisa.CreatePDF(io.StringIO(html), dest=buffer, encoding="utf-8")
+
+    if estado.err:
+        raise ValueError("Error al generar el PDF de la factura")
+
+    return buffer.getvalue()

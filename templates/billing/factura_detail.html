@@ -3,8 +3,17 @@
 {% block content %}
 <div class="max-w-4xl mx-auto animate-fade-in">
 
-  <div class="mb-6 flex items-center justify-between">
+  <div class="mb-6 flex items-center justify-between gap-4">
     <a href="{% url 'billing:list' %}" class="text-sm font-medium text-sky-600 hover:text-sky-700">← Volver a facturas</a>
+    <a href="{% url 'billing:factura_pdf' factura.pk %}"
+       class="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold px-4 py-2 rounded-lg shadow-sm hover:shadow-lg transition-all">
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <polyline points="7 10 12 15 17 10"/>
+        <line x1="12" y1="15" x2="12" y2="3"/>
+      </svg>
+      Descargar PDF
+    </a>
   </div>
 
   <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">

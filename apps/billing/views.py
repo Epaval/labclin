@@ -1,6 +1,7 @@
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.db.models import Q
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.views import View
 from django.views.generic import DetailView, ListView
@@ -8,7 +9,7 @@ from django.views.generic import DetailView, ListView
 from apps.patients.models import Expediente
 
 from .models import Factura
-from .services import generar_factura
+from .services import generar_factura, generar_pdf_factura
 
 
 class FacturaListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
@@ -101,3 +102,15 @@ class FacturaAnularView(LoginRequiredMixin, PermissionRequiredMixin, View):
             messages.success(request, f"Factura {factura.numero} anulada")
 
         return redirect("billing:detail", pk=factura.pk)
+
+
+class FacturaPDFView(LoginRequiredMixin, PermissionRequiredMixin, View):
+    """Descarga el PDF de una factura con el encabezado del laboratorio"""
+    permission_required = "billing.view_factura"
+
+    def get(self, request, pk):
+        factura = get_object_or_404(Factura, pk=pk)
+        pdf = generar_pdf_factura(factura)
+        response = HttpResponse(pdf, content_type="application/pdf")
+        response["Content-Disposition"] = f'inline; filename="factura_{factura.numero}.pdf"'
+        return response
