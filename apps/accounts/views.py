@@ -1,3 +1,4 @@
+from datetime import date
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import login
@@ -15,6 +16,8 @@ from apps.patients.models import Paciente
 from apps.results.models import Resultado
 
 from .forms import (
+    RecuperarClaveForm,
+    RecuperarIdentidadForm,
     ConfigInicialForm,
     EmpleadoClaveForm,
     EmpleadoCreateForm,
@@ -32,6 +35,10 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         context["total_medicos"] = Medico.objects.filter(activo=True).count()
         context["total_examenes"] = Examen.objects.filter(activo=True).count()
         context["total_resultados"] = Resultado.objects.count()
+        context["pacientes_del_dia"] = Paciente.objects.filter(
+            expedientes__fecha_creacion__date=date.today(),
+            activo=True,
+        ).distinct().count()
         context["modo_escritorio"] = settings.ESCRITORIO
         return context
 
@@ -158,3 +165,66 @@ class EquipoClaveView(LoginRequiredMixin, PermissionRequiredMixin, View):
             "form": form,
             "empleado": empleado,
         }, status=400)
+
+
+# ================= RECUPERAR CLAVE (sin correo) =================
+
+from django.shortcuts import get_object_or_404  # noqa: E402
+
+
+class RecuperarClaveView(View):
+    """Paso 1: identificar la cuenta por usuario o correo"""
+
+    def get(self, request):
+        if request.user.is_authenticated:
+            return redirect("dashboard")
+        return render(request, "accounts/recuperar.html", {
+            "form": RecuperarIdentidadForm(),
+        })
+
+    def post(self, request):
+        form = RecuperarIdentidadForm(request.POST)
+        if form.is_valid():
+            usuario = form.cleaned_data["nombre_usuario"].strip()
+            correo = form.cleaned_data["email"].strip()
+            user = Empleado.objects.filter(
+                nombre_usuario__iexact=usuario,
+                email__iexact=correo,
+                is_active=True,
+            ).first()
+
+            if user:
+                request.session["recuperar_uid"] = user.pk
+                return redirect("accounts:recuperar_nueva")
+
+            form.add_error(None, "El usuario y el correo no coinciden con ninguna cuenta activa")
+
+        return render(request, "accounts/recuperar.html", {"form": form}, status=400)
+
+
+class RecuperarNuevaClaveView(View):
+    """Paso 2: escribir la nueva clave"""
+
+    def get(self, request):
+        if not request.session.get("recuperar_uid"):
+            return redirect("accounts:recuperar")
+        return render(request, "accounts/recuperar_nueva.html", {
+            "form": RecuperarClaveForm(),
+        })
+
+    def post(self, request):
+        uid = request.session.get("recuperar_uid")
+        if not uid:
+            return redirect("accounts:recuperar")
+
+        user = get_object_or_404(Empleado, pk=uid)
+        form = RecuperarClaveForm(request.POST)
+
+        if form.is_valid():
+            user.set_password(form.cleaned_data["password1"])
+            user.save(update_fields=["password"])
+            del request.session["recuperar_uid"]
+            messages.success(request, "Clave actualizada. Ya puedes iniciar sesión")
+            return redirect("accounts:login")
+
+        return render(request, "accounts/recuperar_nueva.html", {"form": form}, status=400)

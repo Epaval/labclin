@@ -1,53 +1,99 @@
 """
-Licencias offline para el modo escritorio.
-
-Flujo:
-  1. La app muestra su HUELLA (código de máquina).
-  2. El vendedor genera una CLAVE a partir de esa huella.
-  3. La clave se guarda en data/licencia.key y se valida offline.
+Sistema de licencias con tipos:
+  - prueba:   15 dias desde la primera ejecucion
+  - anual:    1 anio desde la activacion
+  - perpetua: para siempre
 """
 import hashlib
 import hmac
 import platform
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 
-# ⚠️ SECRETO DEL VENDEDOR: cámbialo y NO lo compartas.
-# Debe ser idéntico en la app y en tools/generar_licencia.py
+# SECRETO DEL VENDEDOR (cambialo y no lo compartas)
 SECRET = b"AZMA1972JCPD1970#2005$1991"
 
 PRUEBA_DIAS = 15
+ANUAL_DIAS = 365
+
+TIPOS_VALIDOS = ["anual", "perpetua"]
 
 
 def huella_maquina() -> str:
-    """Identificador único de la PC (MAC + nombre de equipo)"""
+    """Identificador unico de la PC"""
     base = f"{uuid.getnode()}|{platform.node().lower()}"
     return hashlib.sha256(base.encode()).hexdigest()[:16].upper()
 
 
-def generar_clave(huella: str) -> str:
-    """Herramienta del vendedor: huella → clave de activación"""
-    return (
-        hmac.new(SECRET, huella.strip().upper().encode(), hashlib.sha256)
-        .hexdigest()[:12]
-        .upper()
-    )
+def generar_clave(huella: str, tipo: str = "perpetua") -> str:
+    """Genera clave de activacion segun tipo de licencia"""
+    if tipo not in TIPOS_VALIDOS:
+        tipo = "perpetua"
+    mensaje = f"{huella.strip().upper()}|{tipo}"
+    return hmac.new(SECRET, mensaje.encode(), hashlib.sha256).hexdigest()[:12].upper()
 
 
-def clave_valida(clave: str) -> bool:
-    return hmac.compare_digest(clave.strip().upper(), generar_clave(huella_maquina()))
+def clave_valida(clave: str, tipo: str) -> bool:
+    """Valida una clave para un tipo especifico"""
+    esperada = generar_clave(huella_maquina(), tipo)
+    return hmac.compare_digest(clave.strip().upper(), esperada)
 
 
-def estado_licencia() -> str:
-    """Devuelve: 'activada' | 'prueba' | 'vencida'"""
+def leer_licencia():
+    """Lee el archivo de licencia. Devuelve (tipo, clave, fecha_activacion) o None"""
     from django.conf import settings
 
     lic_file = settings.DATA_DIR / "licencia.key"
-    if lic_file.exists():
-        if clave_valida(lic_file.read_text().strip()):
-            return "activada"
+    if not lic_file.exists():
+        return None
 
-    # Periodo de prueba desde la primera ejecución
+    try:
+        contenido = lic_file.read_text().strip()
+        partes = contenido.split("|")
+        if len(partes) == 3:
+            tipo, clave, fecha_iso = partes
+            fecha = datetime.fromisoformat(fecha_iso)
+            return tipo, clave, fecha
+        # Formato viejo (solo clave) -> tratar como perpetua
+        return "perpetua", contenido, None
+    except Exception:
+        return None
+
+
+def guardar_licencia(tipo: str, clave: str):
+    """Guarda la licencia activada"""
+    from django.conf import settings
+
+    lic_file = settings.DATA_DIR / "licencia.key"
+    fecha = datetime.now().isoformat()
+    lic_file.write_text(f"{tipo}|{clave.strip().upper()}|{fecha}")
+
+
+def estado_licencia() -> str:
+    """
+    Devuelve: 'activada' | 'prueba' | 'vencida'
+    """
+    from django.conf import settings
+
+    licencia = leer_licencia()
+
+    if licencia:
+        tipo, clave, fecha_activacion = licencia
+
+        # Validar la clave
+        if clave_valida(clave, tipo):
+            if tipo == "perpetua":
+                return "activada"
+            elif tipo == "anual":
+                if fecha_activacion:
+                    vencimiento = fecha_activacion + timedelta(days=ANUAL_DIAS)
+                    if datetime.now() < vencimiento:
+                        return "activada"
+                    else:
+                        return "vencida"
+                return "activada"
+
+    # Periodo de prueba
     prueba_file = settings.DATA_DIR / "primera_ejecucion"
     if not prueba_file.exists():
         prueba_file.write_text(datetime.now().isoformat())
@@ -59,11 +105,37 @@ def estado_licencia() -> str:
     return "vencida"
 
 
-def dias_prueba_restantes() -> int:
+def dias_restantes() -> int:
+    """Dias restantes de licencia o prueba"""
     from django.conf import settings
+
+    licencia = leer_licencia()
+    if licencia:
+        tipo, clave, fecha_activacion = licencia
+        if clave_valida(clave, tipo):
+            if tipo == "perpetua":
+                return 99999
+            elif tipo == "anual" and fecha_activacion:
+                vencimiento = fecha_activacion + timedelta(days=ANUAL_DIAS)
+                restante = (vencimiento - datetime.now()).days
+                return max(restante, 0)
 
     prueba_file = settings.DATA_DIR / "primera_ejecucion"
     if not prueba_file.exists():
         return PRUEBA_DIAS
     inicio = datetime.fromisoformat(prueba_file.read_text().strip())
     return max(PRUEBA_DIAS - (datetime.now() - inicio).days, 0)
+
+
+def tipo_licencia_actual() -> str:
+    """Devuelve el tipo de licencia actual: prueba, anual, perpetua, vencida"""
+    estado = estado_licencia()
+    if estado == "prueba":
+        return "prueba"
+    if estado == "vencida":
+        return "vencida"
+
+    licencia = leer_licencia()
+    if licencia:
+        return licencia[0]
+    return "prueba"

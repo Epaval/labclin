@@ -6,13 +6,14 @@ from django.db import transaction
 from apps.exams.models import CostoExamen, Examen
 
 # Precios de referencia por perfil (ajustalos a tu mercado)
+# Precios en 0: el laboratorio define sus propios precios
 PRECIO_PERFIL = {
-    "Hematologia": 12, "Coagulacion": 18, "Quimica Sanguinea": 10,
-    "Perfil Lipidico": 12, "Hepaticas": 12, "Renal": 15,
-    "Electrolitos": 10, "Uroanalisis": 12, "Tiroides": 25,
-    "Hormonas": 25, "Marcadores Tumorales": 30, "Serologia / Infecciosas": 15,
-    "Vitaminas y Minerales": 20, "Marcadores Cardiacos": 25,
-    "Pancreas": 12, "Heces": 10, "Inmunologia": 25, "Otros": 15,
+    "Hematologia": 0, "Coagulacion": 0, "Quimica Sanguinea": 0,
+    "Perfil Lipidico": 0, "Hepaticas": 0, "Renal": 0,
+    "Electrolitos": 0, "Uroanalisis": 0, "Tiroides": 0,
+    "Hormonas": 0, "Marcadores Tumorales": 0, "Serologia / Infecciosas": 0,
+    "Vitaminas y Minerales": 0, "Marcadores Cardiacos": 0,
+    "Pancreas": 0, "Heces": 0, "Inmunologia": 0, "Otros": 0,
 }
 
 CATALOGO = {
@@ -188,7 +189,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         nuevos = 0
         for perfil, examenes in CATALOGO.items():
-            precio = Decimal(str(PRECIO_PERFIL.get(perfil, 15)))
+            precio = Decimal(str(PRECIO_PERFIL.get(perfil, 0)))
 
             for nombre, valores_ref in examenes:
                 examen, creado = Examen.objects.get_or_create(

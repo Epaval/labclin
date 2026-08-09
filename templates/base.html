@@ -88,13 +88,13 @@
           {% endif %}
 
           {% if perms.results.view_resultado %}
-            <a href="{% url 'results:list' %}" class="sidebar-link flex items-center gap-3">
+            <a href="{% url 'results:pacientes_atendidos' %}" class="sidebar-link flex items-center gap-3">
               <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
                 <path d="M14 2v6h6"/>
                 <path d="M9 13h6"/><path d="M9 17h6"/>
               </svg>
-              <span class="text-sm font-medium">Resultados</span>
+              <span class="text-sm font-medium">Pacientes del día</span>
             </a>
           {% endif %}
 

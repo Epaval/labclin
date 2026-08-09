@@ -85,3 +85,22 @@ class EmpleadoClaveForm(forms.Form):
         if p2:
             password_validation.validate_password(p2)
         return p2
+
+
+class RecuperarIdentidadForm(forms.Form):
+    nombre_usuario = forms.CharField(label="Usuario", max_length=30)
+    email = forms.EmailField(label="Correo electrónico")
+
+
+class RecuperarClaveForm(forms.Form):
+    password1 = forms.CharField(label="Nueva contraseña", widget=forms.PasswordInput)
+    password2 = forms.CharField(label="Repetir contraseña", widget=forms.PasswordInput)
+
+    def clean_password2(self):
+        p1 = self.cleaned_data.get("password1")
+        p2 = self.cleaned_data.get("password2")
+        if p1 and p2 and p1 != p2:
+            raise forms.ValidationError("Las contraseñas no coinciden")
+        if p2:
+            password_validation.validate_password(p2)
+        return p2
