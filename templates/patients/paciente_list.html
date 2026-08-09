@@ -34,7 +34,7 @@
         <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
       </svg>
       <input type="text"
-             id="input-busqueda"
+             id="input-busqueda" autofocus
              name="q"
              value="{{ q }}"
              autocomplete="off"
@@ -164,19 +164,13 @@
   {% endif %}
 </div>
 
-<script>
-  // Búsqueda en vivo con debounce: busca mientras escribes
-  (function () {
-    const form = document.getElementById('form-busqueda');
-    const input = document.getElementById('input-busqueda');
-    let timer;
 
-    input.addEventListener('input', function () {
-      clearTimeout(timer);
-      timer = setTimeout(function () {
-        form.submit();
-      }, 400);
-    });
+
+<script>
+  // Deja seleccionado el texto del buscador: al escribir se reemplaza solo
+  (function () {
+    var i = document.getElementById('input-busqueda');
+    if (i && i.value) { i.focus(); i.select(); }
   })();
 </script>
 {% endblock %}

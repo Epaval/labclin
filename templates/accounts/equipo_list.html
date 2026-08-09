@@ -22,7 +22,7 @@
   <div class="px-6 py-4 bg-slate-50/60 border-b border-slate-200">
     <form method="get" id="form-busqueda" class="relative max-w-xl">
       <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <input type="text" id="input-busqueda" name="q" value="{{ q }}" autocomplete="off"
+      <input type="text" id="input-busqueda" autofocus name="q" value="{{ q }}" autocomplete="off"
              placeholder="Buscar por nombre o usuario…" class="w-full pl-9 pr-4">
     </form>
   </div>
@@ -110,15 +110,13 @@
   {% endif %}
 </div>
 
+
+
 <script>
+  // Deja seleccionado el texto del buscador: al escribir se reemplaza solo
   (function () {
-    const form = document.getElementById('form-busqueda');
-    const input = document.getElementById('input-busqueda');
-    let timer;
-    input.addEventListener('input', function () {
-      clearTimeout(timer);
-      timer = setTimeout(function () { form.submit(); }, 400);
-    });
+    var i = document.getElementById('input-busqueda');
+    if (i && i.value) { i.focus(); i.select(); }
   })();
 </script>
 {% endblock %}

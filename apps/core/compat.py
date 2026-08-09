@@ -1,49 +1,38 @@
 """
-Compatibilidad SQLite para el modo escritorio.
+Compatibilidad de busqueda sin acentos para SQLite (modo escritorio).
 
-Replica el comportamiento de `unaccent` de PostgreSQL registrando una
-función SQL propia, y activa WAL para mejor concurrencia local.
+Registra la funcion SQL `unaccent` en conexiones SQLite y el lookup
+`unaccent` para CharField/TextField. En PostgreSQL genera el mismo SQL
+que django.contrib.postgres, asi que ambos modos quedan cubiertos.
 """
 import unicodedata
 
 from django.db.backends.signals import connection_created
-from django.db.models import CharField, TextField, Transform
+from django.db.models import CharField, TextField
+from django.db.models.lookups import Transform
 
 
 def _quitar_acentos(valor):
     if valor is None:
-        return valor
+        return None
     return "".join(
-        ch for ch in unicodedata.normalize("NFD", str(valor))
-        if unicodedata.category(ch) != "Mn"
+        c for c in unicodedata.normalize("NFD", str(valor))
+        if unicodedata.category(c) != "Mn"
     )
 
 
-def _configurar_sqlite(sender, connection, **kwargs):
-    if connection.vendor != "sqlite":
-        return
-
-    # Función UNACCENT disponible en SQL
-    connection.connection.create_function(
-        "UNACCENT", 1, _quitar_acentos, deterministic=True
-    )
-
-    # Mejor concurrencia para varios usuarios en red local
-    cursor = connection.cursor()
-    cursor.execute("PRAGMA journal_mode=WAL;")
-    cursor.execute("PRAGMA synchronous=NORMAL;")
+def _registrar_funciones_sqlite(sender, connection, **kwargs):
+    if connection.vendor == "sqlite":
+        connection.connection.create_function("unaccent", 1, _quitar_acentos)
 
 
-class UnaccentSQLite(Transform):
+class Unaccent(Transform):
+    function = "unaccent"
     lookup_name = "unaccent"
-    function = "UNACCENT"
-    bilateral = True  # quita acentos también al término buscado
+    bilateral = True
 
 
-def instalar():
-    from django.conf import settings
-
-    if getattr(settings, "ESCRITORIO", False):
-        connection_created.connect(_configurar_sqlite)
-        CharField.register_lookup(UnaccentSQLite)
-        TextField.register_lookup(UnaccentSQLite)
+def registrar():
+    connection_created.connect(_registrar_funciones_sqlite)
+    CharField.register_lookup(Unaccent)
+    TextField.register_lookup(Unaccent)

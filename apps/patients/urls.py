@@ -1,5 +1,6 @@
 from django.urls import path
 
+from .api import BuscarPacientesView
 from .views import (
     EnviarReportePDFView,
     ExpedienteCreateView,
@@ -15,6 +16,7 @@ from .views import (
 app_name = "patients"
 
 urlpatterns = [
+    path("api/buscar-pacientes/", BuscarPacientesView.as_view(), name="api_buscar_pacientes"),
     path("", PacienteListView.as_view(), name="list"),
     path("nuevo/", PacienteCreateView.as_view(), name="create"),
     path("<int:pk>/editar/", PacienteUpdateView.as_view(), name="update"),
