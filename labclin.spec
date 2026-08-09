@@ -2,21 +2,22 @@
 from PyInstaller.utils.hooks import collect_submodules, collect_data_files
 
 hiddenimports = (
-    collect_submodules('django.contrib.admin')
-    + collect_submodules('django.contrib.auth')
-    + collect_submodules('django.contrib.contenttypes')
-    + collect_submodules('django.contrib.sessions')
-    + collect_submodules('django.contrib.messages')
-    + collect_submodules('django.contrib.staticfiles')
-    + collect_submodules('django.middleware')
-    + collect_submodules('django.db.backends.sqlite3')
-    + collect_submodules('django.core.management.commands')
+    # Terceros usados en apps/config (archivos fuente, no se analizan solos)
+    ['environ', 'django_environ']
+    # Django completo (apps/config son fuente y cargan módulos dinámicamente)
+    + collect_submodules('django')
+    # Nuestros paquetes de terceros
     + collect_submodules('axes')
     + collect_submodules('simple_history')
     + collect_submodules('whitenoise')
     + collect_submodules('waitress')
     + collect_submodules('xhtml2pdf')
     + collect_submodules('reportlab')
+    + collect_submodules('html5lib')
+    + collect_submodules('pypdf')
+    + collect_submodules('svglib')
+    + collect_submodules('tinycss2')
+    + collect_submodules('cssselect2')
     + [
         'django.contrib.auth.backends.ModelBackend',
         'django.contrib.auth.hashers.Argon2PasswordHasher',
@@ -27,6 +28,7 @@ hiddenimports = (
         'django.template.context_processors.auth',
         'django.template.context_processors.messages',
         'html5lib', 'pypdf', 'PIL', 'svglib', 'tinycss2', 'cssselect2', 'argon2',
+        'argon2.exceptions', 'argon2.low_level',
     ]
 )
 
@@ -49,7 +51,7 @@ a = Analysis(
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
-    excludes=['tkinter', 'matplotlib', 'numpy', 'pandas', 'pytest', 'jinja2'],
+    excludes=['tkinter', 'matplotlib', 'numpy', 'pandas', 'pytest'],
     noarchive=False,
 )
 
