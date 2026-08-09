@@ -66,6 +66,6 @@ class Command(BaseCommand):
 
             self.stdout.write(
                 self.style.SUCCESS(
-                    f"Rol {role_name} sincronizado con {permissions.count()} permisos"
+                    f"[OK] Rol {role_name} sincronizado con {permissions.count()} permisos"
                 )
             )

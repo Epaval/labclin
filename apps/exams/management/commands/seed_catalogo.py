@@ -5,62 +5,62 @@ from django.db import transaction
 
 from apps.exams.models import CostoExamen, Examen
 
-# Precios de referencia por perfil (ajústalos a tu mercado)
+# Precios de referencia por perfil (ajustalos a tu mercado)
 PRECIO_PERFIL = {
-    "Hematología": 12, "Coagulación": 18, "Química Sanguínea": 10,
-    "Perfil Lipídico": 12, "Hepáticas": 12, "Renal": 15,
-    "Electrolitos": 10, "Uroanálisis": 12, "Tiroides": 25,
-    "Hormonas": 25, "Marcadores Tumorales": 30, "Serología / Infecciosas": 15,
-    "Vitaminas y Minerales": 20, "Marcadores Cardíacos": 25,
-    "Páncreas": 12, "Heces": 10, "Inmunología": 25, "Otros": 15,
+    "Hematologia": 12, "Coagulacion": 18, "Quimica Sanguinea": 10,
+    "Perfil Lipidico": 12, "Hepaticas": 12, "Renal": 15,
+    "Electrolitos": 10, "Uroanalisis": 12, "Tiroides": 25,
+    "Hormonas": 25, "Marcadores Tumorales": 30, "Serologia / Infecciosas": 15,
+    "Vitaminas y Minerales": 20, "Marcadores Cardiacos": 25,
+    "Pancreas": 12, "Heces": 10, "Inmunologia": 25, "Otros": 15,
 }
 
 CATALOGO = {
-    "Hematología": [
-        ("Hematología completa (Hemograma)", "Leucocitos 4.500-11.000/mm³; Hemoglobina 12-17 g/dL; Plaquetas 150.000-450.000/mm³"),
+    "Hematologia": [
+        ("Hematologia completa (Hemograma)", "Leucocitos 4.500-11.000/mm3; Hemoglobina 12-17 g/dL; Plaquetas 150.000-450.000/mm3"),
         ("Hemoglobina", "12-17 g/dL"),
         ("Hematocrito", "36-53%"),
-        ("Recuento de glóbulos rojos", "4.2-5.9 M/mm³"),
-        ("Leucocitos", "4.500-11.000/mm³"),
-        ("Plaquetas", "150.000-450.000/mm³"),
+        ("Recuento de globulos rojos", "4.2-5.9 M/mm3"),
+        ("Leucocitos", "4.500-11.000/mm3"),
+        ("Plaquetas", "150.000-450.000/mm3"),
         ("Reticulocitos", "0.5-2.5%"),
-        ("Velocidad de sedimentación (VSG)", "0-20 mm/h"),
-        ("Frotis de sangre periférica", "Sin alteraciones"),
-        ("Grupo sanguíneo ABO", "Tipificación"),
+        ("Velocidad de sedimentacion (VSG)", "0-20 mm/h"),
+        ("Frotis de sangre periferica", "Sin alteraciones"),
+        ("Grupo sanguineo ABO", "Tipificacion"),
         ("Factor Rh", "Positivo / Negativo"),
-        ("Recuento de eosinófilos", "0-500/mm³"),
+        ("Recuento de eosinofilos", "0-500/mm3"),
     ],
-    "Coagulación": [
+    "Coagulacion": [
         ("Tiempo de Protrombina (TP)", "11-13.5 segundos"),
         ("INR", "0.8-1.2"),
         ("Tiempo de Tromboplastina Parcial (TTP)", "25-35 segundos"),
-        ("Fibrinógeno", "200-400 mg/dL"),
-        ("Dímero D", "<0.5 µg/mL"),
-        ("Tiempo de sangría", "1-9 minutos"),
-        ("Tiempo de coagulación", "5-11 minutos"),
+        ("Fibrinogeno", "200-400 mg/dL"),
+        ("Dimero D", "<0.5 ug/mL"),
+        ("Tiempo de sangria", "1-9 minutos"),
+        ("Tiempo de coagulacion", "5-11 minutos"),
     ],
-    "Química Sanguínea": [
+    "Quimica Sanguinea": [
         ("Glucosa en ayunas", "70-100 mg/dL"),
         ("Glucosa postprandial", "<140 mg/dL"),
         ("Hemoglobina glicosilada (HbA1c)", "4.0-5.7%"),
         ("Urea", "15-45 mg/dL"),
         ("Creatinina", "0.6-1.3 mg/dL"),
-        ("Ácido úrico", "2.4-7.0 mg/dL"),
-        ("Proteínas totales", "6.0-8.3 g/dL"),
-        ("Albúmina", "3.5-5.5 g/dL"),
+        ("Acido urico", "2.4-7.0 mg/dL"),
+        ("Proteinas totales", "6.0-8.3 g/dL"),
+        ("Albumina", "3.5-5.5 g/dL"),
         ("Calcio", "8.5-10.5 mg/dL"),
-        ("Fósforo", "2.5-4.5 mg/dL"),
+        ("Fosforo", "2.5-4.5 mg/dL"),
         ("Magnesio", "1.7-2.2 mg/dL"),
     ],
-    "Perfil Lipídico": [
+    "Perfil Lipidico": [
         ("Colesterol total", "<200 mg/dL"),
         ("HDL", ">40 mg/dL (H) / >50 mg/dL (M)"),
         ("LDL", "<100 mg/dL"),
         ("VLDL", "5-40 mg/dL"),
-        ("Triglicéridos", "<150 mg/dL"),
-        ("Índice aterogénico", "<5"),
+        ("Trigliceridos", "<150 mg/dL"),
+        ("Indice aterogenico", "<5"),
     ],
-    "Hepáticas": [
+    "Hepaticas": [
         ("Bilirrubina total", "0.1-1.2 mg/dL"),
         ("Bilirrubina directa", "0.0-0.3 mg/dL"),
         ("Bilirrubina indirecta", "0.1-0.9 mg/dL"),
@@ -71,7 +71,7 @@ CATALOGO = {
         ("LDH", "140-280 U/L"),
     ],
     "Renal": [
-        ("Depuración de creatinina", "90-120 mL/min"),
+        ("Depuracion de creatinina", "90-120 mL/min"),
         ("Microalbuminuria", "<30 mg/24h"),
         ("Cistatina C", "0.5-1.0 mg/L"),
     ],
@@ -79,16 +79,16 @@ CATALOGO = {
         ("Sodio", "135-145 mEq/L"),
         ("Potasio", "3.5-5.0 mEq/L"),
         ("Cloro", "98-107 mEq/L"),
-        ("Anión gap", "8-16 mEq/L"),
+        ("Anion gap", "8-16 mEq/L"),
     ],
-    "Uroanálisis": [
-        ("Uroanálisis completo", "pH 4.5-8.0; densidad 1.005-1.030; sin proteínas ni glucosa"),
+    "Uroanalisis": [
+        ("Uroanalisis completo", "pH 4.5-8.0; densidad 1.005-1.030; sin proteinas ni glucosa"),
         ("Urocultivo con antibiograma", "Sin desarrollo bacteriano"),
-        ("Proteínas en orina de 24 horas", "<150 mg/24h"),
+        ("Proteinas en orina de 24 horas", "<150 mg/24h"),
         ("Prueba de embarazo en orina", "Negativo"),
     ],
     "Tiroides": [
-        ("TSH", "0.4-4.0 µUI/mL"),
+        ("TSH", "0.4-4.0 uUI/mL"),
         ("T4 libre", "0.8-1.8 ng/dL"),
         ("T3 total", "80-200 ng/dL"),
         ("T3 libre", "2.3-4.2 pg/mL"),
@@ -97,71 +97,71 @@ CATALOGO = {
     ],
     "Hormonas": [
         ("Prolactina", "2-25 ng/mL"),
-        ("FSH", "Variable según sexo y ciclo"),
-        ("LH", "Variable según sexo y ciclo"),
-        ("Estradiol", "Variable según sexo y ciclo"),
-        ("Progesterona", "Variable según fase del ciclo"),
+        ("FSH", "Variable segun sexo y ciclo"),
+        ("LH", "Variable segun sexo y ciclo"),
+        ("Estradiol", "Variable segun sexo y ciclo"),
+        ("Progesterona", "Variable segun fase del ciclo"),
         ("Testosterona total", "240-950 ng/dL (H)"),
-        ("Cortisol (8 am)", "5-23 µg/dL"),
-        ("Insulina", "2-25 µUI/mL"),
-        ("Péptido C", "1.1-4.4 ng/mL"),
-        ("Hormona antimülleriana (AMH)", "Variable según edad y sexo"),
+        ("Cortisol (8 am)", "5-23 ug/dL"),
+        ("Insulina", "2-25 uUI/mL"),
+        ("Peptido C", "1.1-4.4 ng/mL"),
+        ("Hormona antimulleriana (AMH)", "Variable segun edad y sexo"),
     ],
     "Marcadores Tumorales": [
-        ("PSA (antígeno prostático)", "<4 ng/mL"),
-        ("Alfa-fetoproteína", "<10 ng/mL"),
+        ("PSA (antigeno prostatico)", "<4 ng/mL"),
+        ("Alfa-fetoproteina", "<10 ng/mL"),
         ("CEA", "<5 ng/mL"),
         ("CA-125", "<35 U/mL"),
         ("CA 15-3", "<30 U/mL"),
         ("CA 19-9", "<37 U/mL"),
         ("Beta-hCG cuantitativa", "<5 mUI/mL (no embarazada)"),
     ],
-    "Serología / Infecciosas": [
+    "Serologia / Infecciosas": [
         ("HIV (ELISA)", "No reactivo"),
-        ("HIV (prueba rápida)", "No reactivo"),
+        ("HIV (prueba rapida)", "No reactivo"),
         ("Hepatitis B (HBsAg)", "No reactivo"),
         ("Anticuerpos anti-HBs", ">10 mUI/mL (inmune)"),
         ("Hepatitis C (anti-HCV)", "No reactivo"),
         ("VDRL", "No reactivo"),
         ("RPR", "No reactivo"),
         ("ASO", "<200 UI/mL"),
-        ("Proteína C reactiva (PCR)", "<5 mg/L"),
+        ("Proteina C reactiva (PCR)", "<5 mg/L"),
         ("Factor reumatoide", "<14 UI/mL"),
         ("Widal", "<1:80"),
         ("Dengue (NS1)", "No reactivo"),
         ("Dengue (IgG/IgM)", "No reactivo"),
         ("Toxoplasma (IgG)", "Variable"),
         ("Toxoplasma (IgM)", "No reactivo"),
-        ("Rubéola (IgG)", "Variable (inmunidad)"),
-        ("Rubéola (IgM)", "No reactivo"),
-        ("Helicobacter pylori (antígeno en heces)", "Negativo"),
+        ("Rubeola (IgG)", "Variable (inmunidad)"),
+        ("Rubeola (IgM)", "No reactivo"),
+        ("Helicobacter pylori (antigeno en heces)", "Negativo"),
     ],
     "Vitaminas y Minerales": [
         ("Vitamina D (25-OH)", "20-50 ng/mL"),
         ("Vitamina B12", "200-900 pg/mL"),
-        ("Ácido fólico", "3-17 ng/mL"),
-        ("Hierro sérico", "60-170 µg/dL"),
+        ("Acido folico", "3-17 ng/mL"),
+        ("Hierro serico", "60-170 ug/dL"),
         ("Ferritina", "20-250 ng/mL"),
-        ("TIBC (capacidad fijación de hierro)", "250-370 µg/dL"),
+        ("TIBC (capacidad fijacion de hierro)", "250-370 ug/dL"),
     ],
-    "Marcadores Cardíacos": [
+    "Marcadores Cardiacos": [
         ("Troponina I", "<0.04 ng/mL"),
         ("CK-MB", "<5 ng/mL"),
         ("CPK total", "39-308 U/L"),
         ("NT-proBNP", "<125 pg/mL"),
-        ("Homocisteína", "5-15 µmol/L"),
+        ("Homocisteina", "5-15 umol/L"),
     ],
-    "Páncreas": [
+    "Pancreas": [
         ("Amilasa", "25-125 U/L"),
         ("Lipasa", "10-140 U/L"),
     ],
     "Heces": [
-        ("Coproanálisis", "Sin alteraciones"),
+        ("Coproanalisis", "Sin alteraciones"),
         ("Sangre oculta en heces", "Negativo"),
-        ("Parásitos en heces", "Negativo"),
-        ("Coprocultivo", "Sin desarrollo de patógenos"),
+        ("Parasitos en heces", "Negativo"),
+        ("Coprocultivo", "Sin desarrollo de patogenos"),
     ],
-    "Inmunología": [
+    "Inmunologia": [
         ("ANA (anticuerpos antinucleares)", "<1:40"),
         ("Anti-DNA", "<10 UI/mL"),
         ("Complemento C3", "90-180 mg/dL"),
@@ -175,14 +175,14 @@ CATALOGO = {
         ("Alcohol en sangre", "<0.0 g/dL"),
         ("Colinesterasa", "5.3-12.9 U/L"),
         ("Ceruloplasmina", "20-60 mg/dL"),
-        ("Amonio", "15-45 µg/dL"),
-        ("Ácido láctico", "0.5-2.2 mmol/L"),
+        ("Amonio", "15-45 ug/dL"),
+        ("Acido lactico", "0.5-2.2 mmol/L"),
     ],
 }
 
 
 class Command(BaseCommand):
-    help = "Carga el catálogo completo de exámenes de laboratorio por perfil"
+    help = "Carga el catalogo completo de examenes de laboratorio por perfil"
 
     @transaction.atomic
     def handle(self, *args, **options):
@@ -212,5 +212,5 @@ class Command(BaseCommand):
 
         total = Examen.objects.count()
         self.stdout.write(self.style.SUCCESS(
-            f"[OK] {nuevos} exámenes nuevos. Catálogo total: {total} exámenes"
+            f"[OK] {nuevos} examenes nuevos. Catalogo total: {total} examenes"
         ))
