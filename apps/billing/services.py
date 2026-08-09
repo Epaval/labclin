@@ -8,6 +8,25 @@ from .models import DetalleFactura, Factura
 ESTADOS_REALIZADOS = ["cargado", "validado", "publicado"]
 
 
+def _generar_numero_control():
+    """
+    Genera el numero de control fiscal venezolano: 00-NNNNN.
+    Secuencial global: 00-00001, 00-00002, 00-00003...
+    """
+    maximo = 0
+    numeros = Factura.objects.filter(
+        numero_control__startswith="00-"
+    ).values_list("numero_control", flat=True)
+
+    for n in numeros:
+        try:
+            maximo = max(maximo, int(n.split("-")[1]))
+        except (IndexError, ValueError):
+            continue
+
+    return f"00-{maximo + 1:05d}"
+
+
 def generar_factura(expediente, usuario, descuento=Decimal("0")):
     """
     Genera la factura de una orden tomando los exámenes realizados
@@ -30,6 +49,7 @@ def generar_factura(expediente, usuario, descuento=Decimal("0")):
 
         factura = Factura.objects.create(
             numero=numero,
+            numero_control=_generar_numero_control(),
             expediente=expediente,
             descuento=descuento,
             creado_por=usuario,
