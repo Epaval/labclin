@@ -13,7 +13,7 @@ from datetime import datetime, timedelta
 # SECRETO DEL VENDEDOR (cambialo y no lo compartas)
 SECRET = b"AZMA1972JCPD1970#2005$1991"
 
-PRUEBA_DIAS = 15
+PRUEBA_DIAS = 7
 ANUAL_DIAS = 365
 
 TIPOS_VALIDOS = ["anual", "perpetua"]

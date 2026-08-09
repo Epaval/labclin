@@ -34,6 +34,13 @@ class Examen(models.Model):
         return self.costos.filter(activo=True).order_by("-ultima_fecha_act").first()
 
 
+    @property
+    def precio_actual(self):
+        """Precio activo del examen (0 si no tiene)"""
+        costo = self.costos.filter(activo=True).first()
+        return costo.precio if costo else 0
+
+
 class CostoExamen(models.Model):
     examen = models.ForeignKey(
         Examen,

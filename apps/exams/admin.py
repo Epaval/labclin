@@ -3,14 +3,23 @@ from django.contrib import admin
 from .models import CostoExamen, Examen
 
 
-@admin.register(Examen)
-class ExamenAdmin(admin.ModelAdmin):
-    list_display = ("nombre_completo", "perfil", "activo", "costo_actual")
-    search_fields = ("nombre_completo", "perfil")
-    list_filter = ("activo", "perfil")
-
-
 @admin.register(CostoExamen)
 class CostoExamenAdmin(admin.ModelAdmin):
-    list_display = ("examen", "precio", "activo", "ultima_fecha_act")
+    list_display = ("examen", "precio", "activo")
     list_filter = ("activo",)
+    search_fields = ("examen__nombre_completo",)
+    list_editable = ("precio", "activo")
+
+
+class CostoExamenInline(admin.TabularInline):
+    model = CostoExamen
+    extra = 0
+    fields = ("precio", "activo")
+
+
+@admin.register(Examen)
+class ExamenAdmin(admin.ModelAdmin):
+    list_display = ("nombre_completo", "perfil", "activo")
+    list_filter = ("perfil", "activo")
+    search_fields = ("nombre_completo",)
+    inlines = [CostoExamenInline]
