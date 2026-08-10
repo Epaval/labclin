@@ -201,6 +201,32 @@ def guardar_ip(ip):
         pass
 
 
+def asegurar_firewall():
+    """Agrega la regla de firewall (una vez) si no existe; pide permisos de admin"""
+    if sys.platform != "win32":
+        return
+    import subprocess
+    CREATE_NO_WINDOW = 0x08000000
+    try:
+        check = subprocess.run(
+            ["netsh", "advfirewall", "firewall", "show", "rule", "name=Lab Clinico"],
+            capture_output=True, text=True, creationflags=CREATE_NO_WINDOW, timeout=15,
+        )
+        if check.returncode == 0 and "Lab Clinico" in check.stdout:
+            return  # ya existe
+    except Exception:
+        return
+    try:
+        import ctypes
+        params = ('advfirewall firewall add rule name="Lab Clinico" dir=in '
+                  'action=allow enable=yes protocol=TCP localport=8000')
+        ctypes.windll.shell32.ShellExecuteW(
+            None, "runas", "netsh", params, None, 0
+        )
+    except Exception:
+        pass
+
+
 def abrir_ventana(url, mantener_vivo=False):
     """Abre la app en ventana nativa; si no hay GUI, usa el navegador"""
     try:
@@ -299,9 +325,101 @@ def main():
 
     if args.sin_ventana:
         print(f"Servidor activo en {url}  (Ctrl+C para salir)")
-        import time
-        while True:
-            time.sleep(3600)
+        
+        # Mostrar ventana de estado en modo LAN para que el usuario sepa que está corriendo
+        if args.lan:
+            import tkinter as tk
+            from tkinter import messagebox
+            
+            ventana = tk.Tk()
+            ventana.title("Lab Clínico - Servidor Activo")
+            ventana.geometry("480x280")
+            ventana.resizable(False, False)
+            ventana.configure(bg="#f8fafc")
+            ventana.attributes("-topmost", True)
+            
+            try:
+                ventana.eval("tk::PlaceWindow . center")
+            except Exception:
+                pass
+            
+            frame = tk.Frame(ventana, bg="#f8fafc", padx=30, pady=25)
+            frame.pack(fill="both", expand=True)
+            
+            tk.Label(
+                frame, text="Lab Clínico",
+                font=("Segoe UI", 20, "bold"),
+                bg="#f8fafc", fg="#0f172a",
+            ).pack(pady=(0, 5))
+            
+            tk.Label(
+                frame, text="Servidor activo en la red local",
+                font=("Segoe UI", 11),
+                bg="#f8fafc", fg="#059669",
+            ).pack(pady=(0, 15))
+            
+            try:
+                ip = socket.gethostbyname(socket.gethostname())
+            except Exception:
+                ip = "TU_IP"
+            
+            tk.Label(
+                frame, text=f"IP del servidor: {ip}",
+                font=("Consolas", 12, "bold"),
+                bg="#f8fafc", fg="#1e40af",
+            ).pack(pady=(0, 5))
+            
+            tk.Label(
+                frame, text=f"Puerto: {args.puerto}",
+                font=("Segoe UI", 10),
+                bg="#f8fafc", fg="#64748b",
+            ).pack(pady=(0, 20))
+            
+            tk.Label(
+                frame, text="Esta ventana debe quedar abierta.",
+                font=("Segoe UI", 9),
+                bg="#f8fafc", fg="#64748b",
+            ).pack()
+
+            tk.Label(
+                frame, text="Las estaciones se conectan usando esta IP.",
+                font=("Segoe UI", 9),
+                bg="#f8fafc", fg="#64748b",
+            ).pack(pady=(0, 20))
+            
+            def detener():
+                ventana.destroy()
+                import os, signal
+                os.kill(os.getpid(), signal.SIGTERM)
+            
+            btn = tk.Button(
+                frame, text="Detener servidor",
+                command=detener,
+                font=("Segoe UI", 10, "bold"),
+                bg="#dc2626", fg="white",
+                activebackground="#b91c1c",
+                relief="flat",
+                padx=20, pady=8,
+                cursor="hand2",
+            )
+            btn.pack()
+            
+            # Ajustar la ventana al contenido real (respeta el escalado del sistema)
+            ventana.update_idletasks()
+            req_w = max(ventana.winfo_reqwidth() + 20, 480)
+            req_h = max(ventana.winfo_reqheight() + 20, 300)
+            ventana.geometry(f"{req_w}x{req_h}")
+            try:
+                ventana.eval("tk::PlaceWindow . center")
+            except Exception:
+                pass
+
+            ventana.protocol("WM_DELETE_WINDOW", detener)
+            ventana.mainloop()
+        else:
+            import time
+            while True:
+                time.sleep(3600)
 
     abrir_ventana(url, mantener_vivo=True)
 
