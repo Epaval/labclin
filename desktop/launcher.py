@@ -264,6 +264,13 @@ def main():
 
     from django.core.management import call_command
     call_command("migrate", interactive=False, verbosity=0)
+    
+    # Ejecutar seed_roles aqui (antes de iniciar servidor) para evitar
+    # conflictos de base de datos bloqueada en requests HTTP
+    try:
+        call_command("seed_roles", verbosity=0)
+    except Exception as e:
+        print(f"[WARN] seed_roles fallo: {e}")
 
     host = "0.0.0.0" if args.lan else "127.0.0.1"
 

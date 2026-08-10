@@ -66,7 +66,6 @@ class ConfiguracionInicialView(View):
         data = form.cleaned_data
 
         # Roles siempre; catálogo si el cliente lo desea
-        call_command("seed_roles", verbosity=0)
         if data.get("cargar_catalogo"):
             call_command("seed_catalogo", verbosity=0)
 
