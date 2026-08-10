@@ -1,3 +1,4 @@
+from django.db import transaction
 from django.contrib.auth.models import Group, Permission
 from django.core.management.base import BaseCommand
 from django.db.models import Q
@@ -43,6 +44,7 @@ ROLE_PERMISSIONS = {
 class Command(BaseCommand):
     help = "Crea roles, grupos y permisos base del laboratorio"
 
+    @transaction.atomic
     def handle(self, *args, **options):
         for role_name, perms in ROLE_PERMISSIONS.items():
             group, _ = Group.objects.get_or_create(name=role_name)
