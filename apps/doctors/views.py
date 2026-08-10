@@ -8,6 +8,7 @@ from .models import Medico
 
 class MedicoListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
     model = Medico
+    ordering = ["apellidos", "nombres"]
     permission_required = "doctors.view_medico"
     template_name = "generic_list.html"
     context_object_name = "object_list"
