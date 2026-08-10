@@ -38,6 +38,7 @@ datas = [
     # TU CÓDIGO VA COMO ARCHIVOS (no congelado): se importa en runtime
     ('apps', 'apps'),
     ('config', 'config'),
+    ('icons', 'icons'),
 ]
 datas += collect_data_files('reportlab')
 datas += collect_data_files('xhtml2pdf')
