@@ -299,6 +299,13 @@ def main():
         if ip_puerto == "pedir":
             ip_puerto = leer_ip_guardada()
             if not ip_puerto:
+                # IP escrita por el instalador al elegir modo estacion
+                try:
+                    with open(os.path.join(os.path.dirname(sys.executable), "ip_servidor.txt"), encoding="utf-8") as f:
+                        ip_puerto = f.read().strip() or None
+                except Exception:
+                    ip_puerto = None
+            if not ip_puerto:
                 ip_puerto = pedir_ip_servidor()
                 if not ip_puerto:
                     sys.exit(0)
