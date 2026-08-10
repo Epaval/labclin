@@ -1,11 +1,11 @@
 [Setup]
 AppName=Lab Clínico
-AppVersion=0.0.3
+AppVersion=0.0.4
 AppPublisher=Tu Laboratorio Software
 DefaultDirName={autopf}\LabClinico
 DefaultGroupName=Lab Clínico
 OutputDir=instalador
-OutputBaseFilename=LabClinico-Setup-0.0.3
+OutputBaseFilename=LabClinico-Setup-0.0.4
 Compression=lzma2/max
 SolidCompression=yes
 PrivilegesRequired=lowest
@@ -20,7 +20,7 @@ Name: "autoiniciar"; Description: "Iniciar servidor al encender Windows"; GroupD
 
 [Files]
 Source: "dist\LabClinico\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "icons\*.ico"; DestDir: "{app}\icons"; Flags: ignoreversion createallsubdirs
+Source: "icons\*.ico"; DestDir: "{app}\icons"; Flags: ignoreversion
 
 [Icons]
 Name: "{group}\Lab Clínico"; Filename: "{app}\LabClinico.exe"; IconFilename: "{app}\icons\icono_principal.ico"

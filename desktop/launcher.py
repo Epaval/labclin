@@ -201,6 +201,36 @@ def guardar_ip(ip):
         pass
 
 
+def detectar_otro_servidor(puerto):
+    """Busca otro Lab Clinico Servidor activo en la subred local"""
+    import socket
+    import concurrent.futures
+    import urllib.request
+
+    try:
+        mi_ip = socket.gethostbyname(socket.gethostname())
+    except Exception:
+        return None
+
+    def probar(ip):
+        try:
+            req = urllib.request.urlopen(f"http://{ip}:{puerto}/", timeout=0.5)
+            html = req.read(4000).decode("utf-8", "ignore")
+            if "Lab Clínico" in html or "configuracion-inicial" in html or "accounts/login" in html:
+                return ip
+        except Exception:
+            pass
+        return None
+
+    base = ".".join(mi_ip.split(".")[:3])
+    candidatos = [f"{base}.{i}" for i in range(1, 255) if f"{base}.{i}" != mi_ip]
+    with concurrent.futures.ThreadPoolExecutor(max_workers=64) as ex:
+        for resultado in ex.map(probar, candidatos):
+            if resultado:
+                return resultado
+    return None
+
+
 def asegurar_firewall():
     """Agrega la regla de firewall (una vez) si no existe; pide permisos de admin"""
     if sys.platform != "win32":
