@@ -278,6 +278,11 @@ def main():
         if not url.startswith("http"):
             url = "http://" + url
 
+        # Si no escribio el puerto, usar 8000 por defecto
+        resto = url.split("://", 1)[1]
+        if ":" not in resto:
+            url += ":8000"
+
         abrir_ventana(url)
         sys.exit(0)
 
@@ -291,12 +296,49 @@ def main():
     from django.core.management import call_command
     call_command("migrate", interactive=False, verbosity=0)
     
-    # Ejecutar seed_roles aqui (antes de iniciar servidor) para evitar
-    # conflictos de base de datos bloqueada en requests HTTP
+    # Sincronizar roles/permisos en CADA arranque (idempotente),
+    # antes de iniciar el servidor, con registro en archivo
+    import io
+    buf = io.StringIO()
     try:
-        call_command("seed_roles", verbosity=0)
+        call_command("seed_roles", verbosity=1, stdout=buf)
+        resultado_roles = buf.getvalue() or "(sin salida)"
     except Exception as e:
-        print(f"[WARN] seed_roles fallo: {e}")
+        resultado_roles = f"ERROR: {e}"
+
+    try:
+        from datetime import datetime
+        log_path = os.path.join(DATA_BASE, "launcher.log")
+        with open(log_path, "a", encoding="utf-8") as f:
+            f.write(f"[{datetime.now()}] seed_roles:\n{resultado_roles}\n")
+    except Exception:
+        pass
+
+    # Sincronizar rol <-> groups de empleados existentes
+    # (repara instalaciones donde el seed fallo alguna vez)
+    sync_msg = ""
+    try:
+        from apps.accounts.models import Empleado, Rol as RolModel
+        for emp in Empleado.objects.select_related("rol").all():
+            if emp.rol and emp.rol.group and not emp.groups.filter(pk=emp.rol.group.pk).exists():
+                emp.groups.set([emp.rol.group])
+                sync_msg += f"  {emp.nombre_usuario}: grupo asignado desde rol\n"
+            elif not emp.rol and emp.groups.exists():
+                r = RolModel.objects.filter(group=emp.groups.first()).first()
+                if r:
+                    emp.rol = r
+                    emp.save(update_fields=["rol"])
+                    sync_msg += f"  {emp.nombre_usuario}: rol asignado desde grupo\n"
+    except Exception as e:
+        sync_msg += f"SYNC ERROR: {e}"
+
+    if sync_msg:
+        try:
+            from datetime import datetime
+            with open(os.path.join(DATA_BASE, "launcher.log"), "a", encoding="utf-8") as f:
+                f.write(f"[{datetime.now()}] sync_roles:\n{sync_msg}\n")
+        except Exception:
+            pass
 
     host = "0.0.0.0" if args.lan else "127.0.0.1"
 
