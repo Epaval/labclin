@@ -76,7 +76,23 @@ def main():
     parser.add_argument("--lan", action="store_true")
     parser.add_argument("--puerto", type=int, default=8000)
     parser.add_argument("--sin-ventana", action="store_true")
+    parser.add_argument("--conectar", metavar="IP_PUERTO",
+                        help="Modo estacion: conecta a un servidor Lab Clinico existente")
     args = parser.parse_args()
+
+    # Modo estacion: abre la ventana apuntando al servidor, sin datos locales
+    if args.conectar:
+        url = args.conectar
+        if not url.startswith("http"):
+            url = "http://" + url
+        import webview
+        webview.create_window(
+            "Lab Clinico", url,
+            width=1360, height=860, min_size=(1024, 700),
+        )
+        webview.start()
+        sys.exit(0)
+
 
     os.environ["LABCLIN_MODO"] = "escritorio"
     os.environ["LABCLIN_BASE"] = DATA_BASE

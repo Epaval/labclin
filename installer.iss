@@ -1,11 +1,11 @@
 [Setup]
 AppName=Lab Clínico
-AppVersion=0.0.5
+AppVersion=0.0.6
 AppPublisher=Tu Laboratorio Software
 DefaultDirName={autopf}\LabClinico
 DefaultGroupName=Lab Clínico
 OutputDir=instalador
-OutputBaseFilename=LabClinico-Setup-0.0.5
+OutputBaseFilename=LabClinico-Setup-0.0.6
 Compression=lzma2/max
 SolidCompression=yes
 PrivilegesRequired=lowest
@@ -25,4 +25,5 @@ Name: "{group}\Lab Clínico"; Filename: "{app}\LabClinico.exe"
 Name: "{autodesktop}\Lab Clínico"; Filename: "{app}\LabClinico.exe"; Tasks: desktopicon
 
 [Run]
+Filename: "netsh"; Parameters: "advfirewall firewall add rule name=""Lab Clinico"" dir=in action=allow program=""{app}\LabClinico.exe"" enable=yes"; Flags: runhidden
 Filename: "{app}\LabClinico.exe"; Description: "Abrir Lab Clínico ahora"; Flags: nowait postinstall skipifsilent

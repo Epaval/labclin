@@ -24,6 +24,10 @@ def _quitar_acentos(valor):
 def _registrar_funciones_sqlite(sender, connection, **kwargs):
     if connection.vendor == "sqlite":
         connection.connection.create_function("unaccent", 1, _quitar_acentos)
+        # Modo WAL + espera: varias estaciones trabajando sin "database locked"
+        cursor = connection.connection.cursor()
+        cursor.execute("PRAGMA journal_mode=WAL")
+        cursor.execute("PRAGMA busy_timeout=5000")
 
 
 class Unaccent(Transform):
