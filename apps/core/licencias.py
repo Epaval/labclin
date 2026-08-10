@@ -1,12 +1,18 @@
 """
 Sistema de licencias con tipos:
-  - prueba:   15 dias desde la primera ejecucion
-  - anual:    1 anio desde la activacion
-  - perpetua: para siempre
+  - prueba:   N dias desde la primera ejecucion
+  - anual:    clave OPACA con fecha de vencimiento firmada e incrustada
+  - perpetua: para siempre (CODIGO)
+
+La clave anual no muestra la fecha en texto claro: va firmada (HMAC) y
+ofuscada. Cambiar cualquier caracter invalida la firma. Al vencer, el
+cliente necesita una clave NUEVA (renovacion pagada).
 """
+import base64
 import hashlib
 import hmac
 import platform
+import re
 import uuid
 from datetime import datetime, timedelta
 
@@ -25,18 +31,119 @@ def huella_maquina() -> str:
     return hashlib.sha256(base.encode()).hexdigest()[:16].upper()
 
 
-def generar_clave(huella: str, tipo: str = "perpetua") -> str:
-    """Genera clave de activacion segun tipo de licencia"""
-    if tipo not in TIPOS_VALIDOS:
-        tipo = "perpetua"
-    mensaje = f"{huella.strip().upper()}|{tipo}"
+def _hmac(mensaje: str) -> str:
     return hmac.new(SECRET, mensaje.encode(), hashlib.sha256).hexdigest()[:12].upper()
 
 
-def clave_valida(clave: str, tipo: str) -> bool:
-    """Valida una clave para un tipo especifico"""
-    esperada = generar_clave(huella_maquina(), tipo)
-    return hmac.compare_digest(clave.strip().upper(), esperada)
+def _clave_xor() -> bytes:
+    return hashlib.sha256(SECRET + b"OFUSCACION").digest()
+
+
+def _ofuscar(texto: str) -> str:
+    """Convierte 'FECHA+CODIGO' en un token opaco agrupado en bloques de 4"""
+    key = _clave_xor()
+    data = bytes(b ^ key[i % len(key)] for i, b in enumerate(texto.encode()))
+    token = base64.b32encode(data).decode().rstrip("=")
+    return "-".join(token[i:i + 4] for i in range(0, len(token), 4))
+
+
+def _desofuscar(token: str) -> str:
+    limpio = re.sub(r"[^A-Z2-7]", "", token.upper())
+    data = base64.b32decode(limpio + "=" * (-len(limpio) % 8))
+    key = _clave_xor()
+    return bytes(b ^ key[i % len(key)] for i, b in enumerate(data)).decode()
+
+
+def generar_clave(huella: str, tipo: str = "perpetua", hasta=None) -> str:
+    """
+    Genera clave de activacion.
+    Anual: token opaco que contiene la fecha de vencimiento firmada.
+    Perpetua: CODIGO de 12 caracteres.
+    """
+    huella = huella.strip().upper()
+    if tipo == "anual":
+        if hasta is None:
+            hasta = datetime.now() + timedelta(days=ANUAL_DIAS)
+        fecha_str = hasta.strftime("%Y%m%d")
+        codigo = _hmac(f"{huella}|anual|{fecha_str}")
+        return _ofuscar(fecha_str + codigo)
+    return _hmac(f"{huella}|perpetua")
+
+
+def _analizar_clave(clave):
+    """Devuelve (forma, fecha_str, codigo)"""
+    original = clave.strip().upper()
+
+    # 1) Formato opaco actual (anual con fecha firmada y ofuscada)
+    limpio = re.sub(r"[^A-Z2-7]", "", original)
+    if len(limpio) == 32:
+        try:
+            interno = _desofuscar(limpio)
+            if len(interno) == 20 and interno[:8].isdigit():
+                return "anual_nueva", interno[:8], interno[8:]
+        except Exception:
+            pass
+
+    # 2) Legado plano AAAAMMDD-CODIGO (tambien va firmado)
+    if "-" in original:
+        fecha_str, _, codigo = original.partition("-")
+        if len(fecha_str) == 8 and fecha_str.isdigit() and codigo:
+            return "anual_plana", fecha_str, codigo
+
+    # 3) Formato simple de 12 caracteres (perpetua o anual muy viejo)
+    if original and "-" not in original:
+        return "simple", None, original
+
+    return None, None, None
+
+
+def clave_valida(clave: str, tipo: str = None) -> bool:
+    """Valida la firma de la clave para esta maquina (y tipo si se indica)"""
+    forma, fecha_str, codigo = _analizar_clave(clave)
+    if forma is None:
+        return False
+    huella = huella_maquina()
+
+    if forma in ("anual_nueva", "anual_plana"):
+        if tipo is not None and tipo != "anual":
+            return False
+        return hmac.compare_digest(codigo, _hmac(f"{huella}|anual|{fecha_str}"))
+
+    # Formato simple: perpetua actual o anual legado
+    if tipo in (None, "perpetua") and hmac.compare_digest(codigo, _hmac(f"{huella}|perpetua")):
+        return True
+    if tipo in (None, "anual") and hmac.compare_digest(codigo, _hmac(f"{huella}|anual")):
+        return True
+    return False
+
+
+def fecha_vencimiento_clave(clave):
+    """Fecha de vencimiento incrustada en una clave anual, o None"""
+    forma, fecha_str, _ = _analizar_clave(clave)
+    if forma in ("anual_nueva", "anual_plana"):
+        try:
+            return datetime.strptime(fecha_str, "%Y%m%d")
+        except ValueError:
+            return None
+    return None
+
+
+def clave_vencida(clave) -> bool:
+    """True si la clave anual ya paso su fecha de vencimiento"""
+    venc = fecha_vencimiento_clave(clave)
+    return bool(venc and datetime.now() >= venc)
+
+
+def fecha_vencimiento(tipo, clave, fecha_activacion):
+    """Vencimiento efectivo de una licencia activada (None = perpetua)"""
+    if tipo == "perpetua":
+        return None
+    venc = fecha_vencimiento_clave(clave)
+    if venc:
+        return venc
+    if fecha_activacion:
+        return fecha_activacion + timedelta(days=ANUAL_DIAS)
+    return None
 
 
 def leer_licencia():
@@ -52,9 +159,7 @@ def leer_licencia():
         partes = contenido.split("|")
         if len(partes) == 3:
             tipo, clave, fecha_iso = partes
-            fecha = datetime.fromisoformat(fecha_iso)
-            return tipo, clave, fecha
-        # Formato viejo (solo clave) -> tratar como perpetua
+            return tipo, clave, datetime.fromisoformat(fecha_iso)
         return "perpetua", contenido, None
     except Exception:
         return None
@@ -70,30 +175,20 @@ def guardar_licencia(tipo: str, clave: str):
 
 
 def estado_licencia() -> str:
-    """
-    Devuelve: 'activada' | 'prueba' | 'vencida'
-    """
+    """Devuelve: 'activada' | 'prueba' | 'vencida'"""
     from django.conf import settings
 
     licencia = leer_licencia()
-
     if licencia:
         tipo, clave, fecha_activacion = licencia
-
-        # Validar la clave
         if clave_valida(clave, tipo):
             if tipo == "perpetua":
                 return "activada"
-            elif tipo == "anual":
-                if fecha_activacion:
-                    vencimiento = fecha_activacion + timedelta(days=ANUAL_DIAS)
-                    if datetime.now() < vencimiento:
-                        return "activada"
-                    else:
-                        return "vencida"
+            venc = fecha_vencimiento(tipo, clave, fecha_activacion)
+            if venc is None or datetime.now() < venc:
                 return "activada"
+            return "vencida"
 
-    # Periodo de prueba
     prueba_file = settings.DATA_DIR / "primera_ejecucion"
     if not prueba_file.exists():
         prueba_file.write_text(datetime.now().isoformat())
@@ -101,7 +196,6 @@ def estado_licencia() -> str:
     inicio = datetime.fromisoformat(prueba_file.read_text().strip())
     if (datetime.now() - inicio).days <= PRUEBA_DIAS:
         return "prueba"
-
     return "vencida"
 
 
@@ -115,10 +209,9 @@ def dias_restantes() -> int:
         if clave_valida(clave, tipo):
             if tipo == "perpetua":
                 return 99999
-            elif tipo == "anual" and fecha_activacion:
-                vencimiento = fecha_activacion + timedelta(days=ANUAL_DIAS)
-                restante = (vencimiento - datetime.now()).days
-                return max(restante, 0)
+            venc = fecha_vencimiento(tipo, clave, fecha_activacion)
+            if venc:
+                return max((venc - datetime.now()).days, 0)
 
     prueba_file = settings.DATA_DIR / "primera_ejecucion"
     if not prueba_file.exists():
@@ -128,7 +221,7 @@ def dias_restantes() -> int:
 
 
 def tipo_licencia_actual() -> str:
-    """Devuelve el tipo de licencia actual: prueba, anual, perpetua, vencida"""
+    """Devuelve: prueba | anual | perpetua | vencida"""
     estado = estado_licencia()
     if estado == "prueba":
         return "prueba"

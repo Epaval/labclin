@@ -1,33 +1,45 @@
+#!/usr/bin/env python3
 """
-HERRAMIENTA DEL VENDEDOR - Generar claves de licencia
+Generador de claves de licencia - SOLO VENDEDOR
+Nunca compartas este archivo ni el SECRET.
 
 Uso:
-  python tools/generar_licencia.py HUELLA              -> perpetua
-  python tools/generar_licencia.py HUELLA anual        -> anual (1 anio)
-  python tools/generar_licencia.py HUELLA perpetua     -> perpetua
+  python3 tools/generar_licencia.py HUELLA anual
+  python3 tools/generar_licencia.py HUELLA anual --hasta 2027-12-31
+  python3 tools/generar_licencia.py HUELLA perpetua
 """
-import hashlib
-import hmac
+import argparse
 import sys
+from datetime import datetime
+from pathlib import Path
 
-SECRET = b"LABCLIN-SECRETO-2026-CAMBIA-ESTO"
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-if len(sys.argv) < 2:
-    print("Uso: python generar_licencia.py HUELLA [anual|perpetua]")
-    sys.exit(1)
+from apps.core.licencias import generar_clave
 
-huella = sys.argv[1].strip().upper()
-tipo = sys.argv[2].strip().lower() if len(sys.argv) > 2 else "perpetua"
 
-if tipo not in ["anual", "perpetua"]:
-    print(f"Tipo invalido: {tipo}. Use 'anual' o 'perpetua'")
-    sys.exit(1)
+def main():
+    parser = argparse.ArgumentParser(description="Genera claves de licencia")
+    parser.add_argument("huella", help="Codigo de maquina del cliente")
+    parser.add_argument("tipo", choices=["anual", "perpetua"], nargs="?", default="perpetua")
+    parser.add_argument("--hasta", help="Fecha de vencimiento AAAA-MM-DD (solo anual)")
+    args = parser.parse_args()
 
-mensaje = f"{huella}|{tipo}"
-clave = hmac.new(SECRET, mensaje.encode(), hashlib.sha256).hexdigest()[:12].upper()
+    hasta = None
+    if args.hasta:
+        hasta = datetime.strptime(args.hasta, "%Y-%m-%d")
 
-print(f"Huella:  {huella}")
-print(f"Tipo:    {tipo}")
-print(f"CLAVE:   {clave}")
-print()
-print("El cliente debe escribir esta clave en la pantalla de activacion.")
+    clave = generar_clave(args.huella, args.tipo, hasta=hasta)
+
+    print("=" * 50)
+    print(f"Huella:  {args.huella.upper()}")
+    print(f"Tipo:    {args.tipo}")
+    if args.tipo == "anual":
+        vence = hasta or None
+        print(f"Vence:   {(vence and vence.strftime('%d/%m/%Y')) or 'hoy + 365 dias'}")
+    print(f"CLAVE:   {clave}")
+    print("=" * 50)
+
+
+if __name__ == "__main__":
+    main()

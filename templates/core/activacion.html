@@ -69,7 +69,7 @@
       </div>
     {% elif estado == "activada" %}
       <div class="aviso activada">
-        Licencia {{ tipo }} activa. {% if tipo == "anual" %}Dias restantes: {{ dias }}{% endif %}
+        Licencia {{ tipo }} activa. {% if tipo == "anual" %}Dias restantes: {{ dias }}{% if vencimiento %} &middot; Vence el {{ vencimiento|date:"d/m/Y" }}{% endif %}{% endif %}
       </div>
     {% else %}
       <div class="aviso vencida">
