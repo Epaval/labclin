@@ -11,6 +11,7 @@ hiddenimports = (
     + collect_submodules('simple_history')
     + collect_submodules('whitenoise')
     + collect_submodules('waitress')
+    + collect_submodules('openpyxl')
     + collect_submodules('xhtml2pdf')
     + collect_submodules('reportlab')
     + collect_submodules('html5lib')

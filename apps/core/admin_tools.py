@@ -3,8 +3,12 @@ import json
 from datetime import date as hoy_date, timedelta
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 
-import openpyxl
-from openpyxl.styles import Alignment, Font, PatternFill
+try:
+    import openpyxl
+    from openpyxl.styles import Alignment, Font, PatternFill
+except ImportError:  # ejecutables empaquetados sin openpyxl
+    openpyxl = None
+    Alignment = Font = PatternFill = None
 
 from django.contrib import messages
 from django.contrib.auth.mixins import UserPassesTestMixin
