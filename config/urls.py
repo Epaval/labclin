@@ -5,10 +5,14 @@ from django.urls import include, path
 
 from apps.accounts.views import ConfiguracionInicialView, DashboardView
 from . import views as error_views
+from apps.core.admin_tools import AjusteMasivoPreciosView, EstadisticasView, FacturaExportarExcelView
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("", DashboardView.as_view(), name="dashboard"),
+    path("admin-lab/estadisticas/", EstadisticasView.as_view(), name="estadisticas"),
+    path("admin-lab/exportar-excel/", FacturaExportarExcelView.as_view(), name="exportar_excel"),
+    path("admin-lab/ajuste-precios/", AjusteMasivoPreciosView.as_view(), name="ajuste_masivo"),
     path("configuracion-inicial/", ConfiguracionInicialView.as_view(), name="configuracion_inicial"),
     path("respaldo/", BackupView.as_view(), name="backup"),
     path("activacion/", ActivacionView.as_view(), name="activacion"),

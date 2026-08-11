@@ -14,7 +14,7 @@ from apps.results.models import Resultado
 
 from .forms import ExpedienteForm, PacienteForm
 from .models import Expediente, ExpedienteMedico, Paciente
-from .services import enviar_reporte_pdf, generar_pdf_reporte
+from .services import generar_pdf_reporte
 
 
 class PacienteListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
@@ -84,38 +84,25 @@ class PacienteReportePDFView(LoginRequiredMixin, PermissionRequiredMixin, View):
 
     def get(self, request, pk):
         paciente = get_object_or_404(Paciente, pk=pk)
+        orden_pk = request.GET.get("orden")
+
         expedientes = (
             paciente.expedientes.prefetch_related("resultados__examen")
             .order_by("-fecha_creacion")
         )
+        if orden_pk:
+            expedientes = expedientes.filter(pk=orden_pk)
 
         pdf = generar_pdf_reporte(paciente, expedientes)
 
+        nombre = f"Resultado_Orden_{orden_pk}_{paciente.full_name}.pdf" if orden_pk else f"reporte_{paciente.pk}.pdf"
         response = HttpResponse(pdf, content_type="application/pdf")
-        response["Content-Disposition"] = f'inline; filename="reporte_{paciente.pk}.pdf"'
+        response["Content-Disposition"] = f'inline; filename="{nombre}"'
         return response
 
 
-class EnviarReportePDFView(LoginRequiredMixin, PermissionRequiredMixin, View):
-    permission_required = "results.editar_result"
-
-    def post(self, request, pk):
-        paciente = get_object_or_404(Paciente, pk=pk)
-
-        try:
-            expedientes = (
-                paciente.expedientes.prefetch_related("resultados__examen")
-                .order_by("-fecha_creacion")
-            )
-            enviar_reporte_pdf(paciente, expedientes)
-            messages.success(request, f"Reporte enviado a {paciente.email}")
-        except Exception as exc:
-            messages.error(request, f"No se pudo enviar el reporte: {exc}")
-
-        return redirect("patients:historial", pk=paciente.pk)
-
-
 # ================= ÓRDENES DE LABORATORIO =================
+
 
 class ExpedienteListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
     model = Expediente

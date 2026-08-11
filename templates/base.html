@@ -162,6 +162,26 @@
       {% endif %}
     </nav>
 
+      {% if user.is_superuser %}
+      <div>
+        <div class="px-3 mb-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">Analítica</div>
+        <div class="space-y-0.5">
+          <a href="{% url 'estadisticas' %}" class="sidebar-link flex items-center gap-3">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
+            <span class="text-sm font-medium">Estadísticas</span>
+          </a>
+          <a href="{% url 'exportar_excel' %}" class="sidebar-link flex items-center gap-3">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            <span class="text-sm font-medium">Exportar Excel</span>
+          </a>
+          <a href="{% url 'ajuste_masivo' %}" class="sidebar-link flex items-center gap-3">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>
+            <span class="text-sm font-medium">Ajuste de precios</span>
+          </a>
+        </div>
+      </div>
+      {% endif %}
+
     <!-- Usuario (footer del sidebar) -->
     <div class="relative border-t border-slate-100 p-3 flex-shrink-0">
       <button onclick="toggleDropdown()" type="button"
@@ -216,7 +236,7 @@
       </button>
 
       <div class="flex-1 hidden lg:block">
-        <h1 class="text-sm font-semibold text-slate-700">{% block page_title %}Panel principal{% endblock %}</h1>
+        <h1 class="text-sm font-semibold text-slate-700">{% block page_title %}Lab Clínico{% endblock %}</h1>
       </div>
 
       <div class="lg:hidden flex items-center gap-2">

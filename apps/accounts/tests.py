@@ -1,5 +1,4 @@
-from django.core import mail
-from django.test import TestCase, override_settings
+from django.test import TestCase
 from django.urls import reverse
 
 from apps.accounts.models import Empleado
@@ -61,28 +60,3 @@ class RutasTest(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Nuevo paciente")
-
-
-class CorreoTest(TestCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls.user = Empleado.objects.create_superuser(
-            nombre_usuario="email_test",
-            email="email_test@example.com",
-            password="Passw0rd!123",
-            nombres="Email",
-            apellidos="Test",
-        )
-
-    @override_settings(
-        EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend"
-    )
-    def test_envio_correo_de_prueba(self):
-        self.client.force_login(self.user)
-
-        response = self.client.post(reverse("results:test_email"))
-
-        self.assertEqual(response.status_code, 302)
-        self.assertEqual(len(mail.outbox), 1)
-        self.assertEqual(mail.outbox[0].to, [self.user.email])
-        self.assertIn("Correo de prueba", mail.outbox[0].subject)

@@ -64,26 +64,3 @@ def generar_pdf_reporte(paciente, expedientes):
     return buffer.getvalue()
 
 
-def enviar_reporte_pdf(paciente, expedientes):
-    """Envía el reporte PDF al correo del paciente"""
-    if not paciente.email:
-        raise ValueError("El paciente no tiene correo electrónico registrado")
-
-    pdf = generar_pdf_reporte(paciente, expedientes)
-
-    mensaje = EmailMessage(
-        subject=f"Resultados de laboratorio - {paciente.full_name}",
-        body=(
-            f"Estimado(a) {paciente.full_name}:\n\n"
-            "Adjunto encontrará el reporte de sus resultados de laboratorio.\n\n"
-            "Este documento es confidencial.\n"
-            "Laboratorio Clínico"
-        ),
-        to=[paciente.email],
-    )
-    mensaje.attach(
-        f"resultados_{paciente.ci or paciente.pk}.pdf",
-        pdf,
-        "application/pdf",
-    )
-    mensaje.send(fail_silently=False)

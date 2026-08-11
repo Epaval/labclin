@@ -27,7 +27,8 @@ hiddenimports = (
         'django.template.context_processors.request',
         'django.template.context_processors.auth',
         'django.template.context_processors.messages',
-        'html5lib', 'pypdf', 'PIL', 'svglib', 'tinycss2', 'cssselect2', 'argon2',
+        'html5lib', 'pypdf', 'PIL',
+        'openpyxl', 'svglib', 'tinycss2', 'cssselect2', 'argon2',
         'argon2.exceptions', 'argon2.low_level',
     ]
 )

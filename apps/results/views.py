@@ -1,7 +1,7 @@
+from django.shortcuts import get_object_or_404, render
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
-from django.core.mail import send_mail
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
 from django.views import View
@@ -48,25 +48,80 @@ class ResultadoUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateVie
         )
 
 
-class TestEmailView(LoginRequiredMixin, PermissionRequiredMixin, View):
-    permission_required = "results.view_resultado"
-    http_method_names = ["post"]
 
-    def post(self, request, *args, **kwargs):
-        if not request.user.email:
-            messages.error(request, "Tu usuario no tiene email configurado")
-            return redirect("dashboard")
+class CargarOrdenResultadosView(LoginRequiredMixin, PermissionRequiredMixin, View):
+    """Carga masiva de resultados para todos los exámenes de una orden"""
+    permission_required = "results.editar_result"
 
-        try:
-            send_mail(
-                subject="Correo de prueba",
-                message="Si ves este correo, la configuración básica de email funciona.",
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[request.user.email],
-                fail_silently=False,
-            )
-            messages.success(request, f"Correo de prueba enviado a {request.user.email}")
-        except Exception as exc:
-            messages.error(request, f"No se pudo enviar el correo: {exc}")
+    def get(self, request, pk):
+        from apps.patients.models import Expediente
+        orden = get_object_or_404(Expediente, pk=pk)
+        resultados = orden.resultados.select_related("examen").order_by("examen__nombre_completo")
+        
+        return render(request, "results/cargar_orden.html", {
+            "orden": orden,
+            "resultados": resultados,
+            "title": f"Cargar resultados · Orden #{orden.pk}",
+        })
 
-        return redirect("dashboard")
+    def post(self, request, pk):
+        from apps.patients.models import Expediente
+        from django.db import transaction
+        from decimal import Decimal, InvalidOperation
+
+        orden = get_object_or_404(Expediente, pk=pk)
+        resultados = orden.resultados.select_related("examen").all()
+        
+        modo = request.POST.get("modo", "parcial")  # "todo" o "parcial"
+        guardados = 0
+        errores = []
+
+        with transaction.atomic():
+            for r in resultados:
+                prefix = f"r{r.pk}"
+                
+                # Validar que el campo existe en el POST
+                if f"{prefix}_valor" not in request.POST:
+                    continue
+
+                valor_str = request.POST.get(f"{prefix}_valor", "").strip()
+                unidad = request.POST.get(f"{prefix}_unidad", "").strip()
+                obs = request.POST.get(f"{prefix}_obs", "").strip()
+
+                # Si está vacío y el modo es "parcial", saltar
+                if not valor_str and modo == "parcial":
+                    continue
+                
+                # Si está vacío y el modo es "todo", error
+                if not valor_str and modo == "todo":
+                    errores.append(f"{r.examen.nombre_completo}: valor requerido")
+                    continue
+
+                try:
+                    if r.tipo_resultado == "numerico":
+                        r.valor_numerico = Decimal(valor_str.replace(",", "."))
+                        r.unidad = unidad
+                        r.estado = "cargado"
+                        r.save()
+                        guardados += 1
+                    elif r.tipo_resultado == "cualitativo":
+                        r.valor_cualitativo = valor_str
+                        r.estado = "cargado"
+                        r.save()
+                        guardados += 1
+                    elif r.tipo_resultado == "texto":
+                        r.valor_cualitativo = valor_str  # Reutilizamos campo de texto
+                        r.estado = "cargado"
+                        r.save()
+                        guardados += 1
+                except (InvalidOperation, ValueError) as e:
+                    errores.append(f"{r.examen.nombre_completo}: valor inválido")
+
+        if errores:
+            messages.error(request, f"Guardados {guardados}, errores: {', '.join(errores)}")
+        elif guardados == 0:
+            messages.info(request, "No hay valores nuevos para guardar")
+        else:
+            messages.success(request, f"Se guardaron {guardados} resultado(s) correctamente")
+
+        return redirect("patients:orden_detail", pk=orden.pk)
