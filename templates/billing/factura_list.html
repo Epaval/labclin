@@ -52,6 +52,9 @@
                 {% elif factura.estado == 'pagada' %}bg-emerald-100 text-emerald-700
                 {% else %}bg-red-100 text-red-700{% endif %}">
                 {{ factura.get_estado_display }}
+                {% if factura.estado == 'anulada' and factura.motivo_anulacion %}
+                  <span class="block text-[10px] font-normal normal-case text-red-500 mt-0.5">{{ factura.get_motivo_anulacion_display }}</span>
+                {% endif %}
               </span>
             </td>
             <td class="px-6 py-4 text-sm text-slate-500">{{ factura.fecha_creacion|date:"d/m/Y H:i" }}</td>
