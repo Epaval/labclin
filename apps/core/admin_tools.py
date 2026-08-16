@@ -78,6 +78,9 @@ class FacturaExportarExcelView(SoloSuperUser, TemplateView):
     template_name = "reports/exportar_excel.html"
 
     def post(self, request, *args, **kwargs):
+        if openpyxl is None:
+            messages.error(request, "La exportacion a Excel no esta disponible en esta instalacion.")
+            return redirect(request.path)
         desde = request.POST.get("desde") or None
         hasta = request.POST.get("hasta") or None
 
