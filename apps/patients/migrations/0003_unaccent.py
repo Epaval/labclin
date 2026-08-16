@@ -10,7 +10,7 @@ def activar_unaccent(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("patients", "0001_initial"),
+        ("patients", "0002_initial"),
     ]
 
     operations = [
