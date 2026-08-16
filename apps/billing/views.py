@@ -97,9 +97,22 @@ class FacturaAnularView(LoginRequiredMixin, PermissionRequiredMixin, View):
         if factura.estado == "pagada":
             messages.error(request, "No se puede anular una factura pagada")
         else:
+            motivo = request.POST.get("motivo_anulacion", "").strip()
+            motivo_otro = request.POST.get("motivo_anulacion_otro", "").strip()
+            
+            if not motivo:
+                messages.error(request, "Debe seleccionar un motivo de anulación")
+                return redirect("billing:detail", pk=factura.pk)
+            
+            if motivo == "otros" and not motivo_otro:
+                messages.error(request, "Debe especificar el motivo cuando selecciona 'Otros'")
+                return redirect("billing:detail", pk=factura.pk)
+            
             factura.estado = "anulada"
-            factura.save(update_fields=["estado", "ultima_fecha_act"])
-            messages.success(request, f"Factura {factura.numero} anulada")
+            factura.motivo_anulacion = motivo
+            factura.motivo_anulacion_otro = motivo_otro if motivo == "otros" else ""
+            factura.save(update_fields=["estado", "motivo_anulacion", "motivo_anulacion_otro", "ultima_fecha_act"])
+            messages.success(request, f"Factura {factura.numero} anulada. Motivo: {factura.get_motivo_anulacion_display()}")
 
         return redirect("billing:detail", pk=factura.pk)
 

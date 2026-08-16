@@ -42,6 +42,21 @@ class Factura(models.Model):
 
     observaciones = models.TextField(blank=True)
 
+    MOTIVO_ANULACION_CHOICES = [
+        ("devolucion", "Devolución al cliente"),
+        ("falta_resultado", "Falta de resultado"),
+        ("otros", "Otros"),
+    ]
+    motivo_anulacion = models.CharField(
+        max_length=20,
+        choices=MOTIVO_ANULACION_CHOICES,
+        blank=True,
+    )
+    motivo_anulacion_otro = models.TextField(
+        "Especificar motivo",
+        blank=True,
+    )
+
     creado_por = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.PROTECT,

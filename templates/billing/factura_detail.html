@@ -5,7 +5,7 @@
 
   <div class="mb-6 flex items-center justify-between gap-4">
     <a href="{% url 'billing:list' %}" class="text-sm font-medium text-sky-600 hover:text-sky-700">← Volver a facturas</a>
-    <a href="{% url 'billing:factura_pdf' factura.pk %}"
+    <a href="{% url 'billing:factura_pdf' factura.pk %}" target="_blank"
        class="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold px-4 py-2 rounded-lg shadow-sm hover:shadow-lg transition-all">
       <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
@@ -200,8 +200,29 @@
 
     <form method="post" action="{% url 'billing:anular' factura.pk %}">
       {% csrf_token %}
+      
+      <div class="mt-6">
+        <label class="block text-sm font-semibold text-slate-700 mb-2">Motivo de anulación *</label>
+        <select name="motivo_anulacion" id="motivo-anulacion-select" required
+                class="w-full border border-slate-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                onchange="toggleMotivoOtro()">
+          <option value="">Seleccionar motivo...</option>
+          <option value="devolucion">Devolución al cliente</option>
+          <option value="falta_resultado">Falta de resultado</option>
+          <option value="otros">Otros</option>
+        </select>
+      </div>
+
+      <div class="mt-4 hidden" id="motivo-otro-container">
+        <label class="block text-sm font-semibold text-slate-700 mb-2">Especificar motivo *</label>
+        <textarea name="motivo_anulacion_otro" id="motivo-anulacion-otro"
+                  rows="3"
+                  class="w-full border border-slate-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                  placeholder="Describe el motivo de la anulación..."></textarea>
+      </div>
+
       <button type="submit"
-              class="inline-flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white text-sm font-semibold px-5 py-2.5 rounded-lg shadow-sm hover:shadow-lg transition-all">
+              class="mt-6 inline-flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white text-sm font-semibold px-5 py-2.5 rounded-lg shadow-sm hover:shadow-lg transition-all">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/>
           <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
@@ -213,6 +234,21 @@
 </div>
 
 <script>
+  function toggleMotivoOtro() {
+    const select = document.getElementById('motivo-anulacion-select');
+    const container = document.getElementById('motivo-otro-container');
+    const textarea = document.getElementById('motivo-anulacion-otro');
+    
+    if (select.value === 'otros') {
+      container.classList.remove('hidden');
+      textarea.required = true;
+    } else {
+      container.classList.add('hidden');
+      textarea.required = false;
+      textarea.value = '';
+    }
+  }
+
   function abrirModalAnular() {
     document.getElementById('modal-anular-backdrop').classList.remove('hidden');
     document.getElementById('modal-anular').classList.remove('hidden');
