@@ -84,11 +84,7 @@ class FacturaExportarExcelView(SoloSuperUser, TemplateView):
         desde = request.POST.get("desde") or None
         hasta = request.POST.get("hasta") or None
 
-        qs = (
-            Factura.objects.select_related("expediente__paciente")
-            .exclude(estado="anulada")
-            .order_by("numero_control")
-        )
+        qs = Factura.objects.select_related("expediente__paciente").order_by("numero_control")
         if desde:
             qs = qs.filter(fecha_creacion__date__gte=desde)
         if hasta:
@@ -101,7 +97,7 @@ class FacturaExportarExcelView(SoloSuperUser, TemplateView):
         fill = PatternFill("solid", fgColor="1E65C0")
         font = Font(bold=True, color="FFFFFF")
 
-        ws.append(["N Control", "N Factura", "Fecha", "Paciente", "Estado", "Metodo de pago", "Subtotal", "Descuento", "Total"])
+        ws.append(["N Control", "N Factura", "Fecha", "Paciente", "Estado", "Motivo anulación", "Detalle motivo", "Metodo de pago", "Subtotal", "Descuento", "Total"])
         for c in ws[1]:
             c.fill = fill
             c.font = font
@@ -109,13 +105,16 @@ class FacturaExportarExcelView(SoloSuperUser, TemplateView):
 
         total_general = Decimal("0")
         for f in qs:
-            total_general += f.total
+            if f.estado != "anulada":
+                total_general += f.total
             ws.append([
                 f.numero_control,
                 f.numero,
                 f.fecha_creacion.strftime("%d/%m/%Y"),
                 str(f.expediente.paciente),
                 f.get_estado_display(),
+                f.get_motivo_anulacion_display() or "-",
+                f.motivo_anulacion_otro or "-",
                 f.get_metodo_pago_display() or "-",
                 float(f.subtotal),
                 float(f.descuento),
@@ -123,11 +122,11 @@ class FacturaExportarExcelView(SoloSuperUser, TemplateView):
             ])
 
         ws.append([])
-        ws.append(["", "", "", "", "", "", "", "TOTAL:", float(total_general)])
-        ws.cell(row=ws.max_row, column=8).font = Font(bold=True)
-        ws.cell(row=ws.max_row, column=9).font = Font(bold=True)
+        ws.append(["", "", "", "", "", "", "", "", "", "TOTAL:", float(total_general)])
+        ws.cell(row=ws.max_row, column=10).font = Font(bold=True)
+        ws.cell(row=ws.max_row, column=11).font = Font(bold=True)
 
-        for i, ancho in enumerate([12, 12, 12, 40, 10, 18, 12, 12, 12], start=1):
+        for i, ancho in enumerate([12, 12, 12, 40, 10, 18, 30, 18, 12, 12, 12], start=1):
             ws.column_dimensions[chr(64 + i)].width = ancho
 
         wd = wb.create_sheet("Detalles")
