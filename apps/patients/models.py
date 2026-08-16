@@ -158,6 +158,21 @@ class Expediente(models.Model):
             models.Index(fields=["fecha_creacion"]),
         ]
 
+    def actualizar_estado_resultados(self):
+        """Avanza/cierra el estado segun el progreso de los resultados."""
+        if self.estado not in ("abierto", "procesando"):
+            return
+        estados = list(self.resultados.values_list("estado", flat=True))
+        if not estados:
+            return
+        if all(e != "borrador" for e in estados):
+            self.estado = "cerrado"
+        elif any(e != "borrador" for e in estados) and self.estado == "abierto":
+            self.estado = "procesando"
+        else:
+            return
+        self.save(update_fields=["estado"])
+
     def __str__(self):
         return f"Expediente {self.pk} - {self.paciente}"
 

@@ -39,7 +39,9 @@ class ResultadoUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateVie
             form.instance.estado = "cargado"
 
         messages.success(self.request, "Resultado guardado correctamente")
-        return super().form_valid(form)
+        response = super().form_valid(form)
+        self.object.expediente.actualizar_estado_resultados()
+        return response
 
     def get_success_url(self):
         return reverse_lazy(
@@ -116,6 +118,8 @@ class CargarOrdenResultadosView(LoginRequiredMixin, PermissionRequiredMixin, Vie
                         guardados += 1
                 except (InvalidOperation, ValueError) as e:
                     errores.append(f"{r.examen.nombre_completo}: valor inválido")
+
+        orden.actualizar_estado_resultados()
 
         if errores:
             messages.error(request, f"Guardados {guardados}, errores: {', '.join(errores)}")
