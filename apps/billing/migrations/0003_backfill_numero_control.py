@@ -1,4 +1,4 @@
-from django.db import migrations
+from django.db import migrations, models
 
 
 def backfill_numero_control(apps, schema_editor):
@@ -31,4 +31,9 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.RunPython(backfill_numero_control, migrations.RunPython.noop),
+        migrations.AlterField(
+            model_name='factura',
+            name='numero_control',
+            field=models.CharField(blank=True, help_text='Formato fiscal: 00-NNNNN (auto-generado)', max_length=10, unique=True, verbose_name='Número de control'),
+        ),
     ]

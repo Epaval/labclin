@@ -13,6 +13,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='factura',
             name='numero_control',
-            field=models.CharField(blank=True, help_text='Formato fiscal: 00-NNNNN (auto-generado)', max_length=10, unique=True, verbose_name='Número de control'),
+            field=models.CharField(blank=True, help_text='Formato fiscal: 00-NNNNN (auto-generado)', max_length=10, verbose_name='Número de control'),
         ),
     ]
