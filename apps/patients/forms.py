@@ -35,12 +35,14 @@ class PacienteForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         # En edición, la fecha de nacimiento es inmutable (solo lectura)
         if self.instance and self.instance.pk:
-            fecha_formateada = self.instance.fecha_nac.strftime("%d/%m/%Y") if self.instance.fecha_nac else ""
-            self.fields["fecha_nac"].widget = forms.TextInput(attrs={
-                "readonly": True,
-                "value": fecha_formateada,
-                "class": "bg-slate-100 cursor-not-allowed",
-            })
+            self.fields["fecha_nac"].widget = forms.DateInput(
+                attrs={
+                    "readonly": True,
+                    "class": "bg-slate-100 cursor-not-allowed",
+                },
+                format="%d/%m/%Y",
+            )
+            self.fields["fecha_nac"].input_formats = ["%d/%m/%Y", "%Y-%m-%d"]
             self.fields["fecha_nac"].help_text = "La fecha de nacimiento no se puede modificar"
 
 
