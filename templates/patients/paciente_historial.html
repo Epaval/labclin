@@ -56,6 +56,19 @@
         </div>
       </div>
 
+      {% if exp.observaciones %}
+        <div class="px-6 py-3 bg-amber-50 border-b border-amber-200">
+          <div class="flex items-start gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="8" x2="12" y2="12"/>
+              <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            <p class="text-xs text-amber-800"><strong>Observaciones:</strong> {{ exp.observaciones }}</p>
+          </div>
+        </div>
+      {% endif %}
+
       <div class="overflow-x-auto">
         <table class="w-full text-left">
           <thead>
