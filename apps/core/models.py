@@ -1,4 +1,13 @@
+import os
+
+from django.core.exceptions import ValidationError
 from django.db import models
+
+
+def validar_logo(value):
+    ext = value.name.rsplit(".", 1)[-1].lower()
+    if ext not in ("png", "jpg", "jpeg", "svg"):
+        raise ValidationError("Formato permitido: PNG, JPG o SVG")
 
 
 class DatosLaboratorio(models.Model):
@@ -12,11 +21,12 @@ class DatosLaboratorio(models.Model):
     ciudad = models.CharField(max_length=80, blank=True)
     lema = models.CharField(max_length=120, blank=True)
     simbolo_moneda = models.CharField(max_length=5, default="Bs.")
-    logo = models.ImageField(
-        "Logo del laboratorio (PNG o JPG)",
+    logo = models.FileField(
+        "Logo del laboratorio (PNG, JPG o SVG)",
         upload_to="logo/",
         null=True,
         blank=True,
+        validators=[validar_logo],
         help_text="Se muestra en el encabezado de reportes y facturas en PDF",
     )
     bioanalista_nombre = models.CharField(
@@ -36,6 +46,26 @@ class DatosLaboratorio(models.Model):
     def save(self, *args, **kwargs):
         self.pk = 1
         super().save(*args, **kwargs)
+
+    @property
+    def logo_pdf_path(self):
+        """Ruta util para el PDF: convierte SVG a PNG cacheado si es necesario"""
+        if not self.logo:
+            return None
+        path = self.logo.path
+        if path.lower().endswith(".svg"):
+            png = path + ".png"
+            if not os.path.exists(png) or os.path.getmtime(png) < os.path.getmtime(path):
+                try:
+                    from svglib.svglib import svg2rlg
+                    from reportlab.graphics import renderPM
+                    drawing = svg2rlg(path)
+                    if drawing:
+                        renderPM.drawToFile(drawing, png, fmt="PNG", dpi=150)
+                except Exception:
+                    return None
+            return png if os.path.exists(png) else None
+        return path
 
     @classmethod
     def cargar(cls):

@@ -98,7 +98,7 @@ def generar_pdf_factura(factura):
             "paciente": factura.expediente.paciente,
             "detalles": factura.detalles.select_related("examen").all(),
             "lab": lab,
-            "logo_path": lab.logo.path if lab.logo else None,
+            "logo_path": lab.logo_pdf_path,
             "fecha_generacion": timezone.now(),
         },
     )

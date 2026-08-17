@@ -28,7 +28,10 @@
   <!-- Encabezado del laboratorio -->
   <table class="sin-borde">
     <tr>
-      <td>
+      <td style="width:25%; vertical-align:top;">
+        {% if logo_path %}<img src="{{ logo_path }}" style="width:100px;" />{% endif %}
+      </td>
+      <td style="width:50%; text-align:center; vertical-align:top;">
         <div class="lab-nombre">{{ lab.nombre }}</div>
         {% if lab.rif %}<div class="lab-rif">RIF: {{ lab.rif }}</div>{% endif %}
         {% if lab.direccion %}
@@ -43,8 +46,7 @@
         {% endif %}
         {% if lab.lema %}<div class="lema">"{{ lab.lema }}"</div>{% endif %}
       </td>
-      <td style="text-align:right; vertical-align:top;">
-        {% if logo_path %}<img src="{{ logo_path }}" style="width:110px; margin-bottom:6px;" /><br>{% endif %}
+      <td style="width:25%; text-align:right; vertical-align:top;">
         <div class="factura-num">FACTURA</div>
         <div class="factura-num">N° {{ factura.numero }}</div>
         {% if factura.numero_control %}
