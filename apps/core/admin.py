@@ -7,7 +7,7 @@ from .models import DatosLaboratorio
 class DatosLaboratorioAdmin(admin.ModelAdmin):
     list_display = ("nombre", "rif", "telefono")
     fieldsets = (
-        ("Identificacion", {"fields": ("nombre", "rif", "lema")}),
+        ("Identificacion", {"fields": ("nombre", "rif", "lema", "logo")}),
         ("Contacto", {"fields": ("direccion", "ciudad", "telefono", "email")}),
         ("Facturacion", {"fields": ("simbolo_moneda",)}),
         ("Firma del reporte", {"fields": ("bioanalista_nombre", "bioanalista_registro")}),

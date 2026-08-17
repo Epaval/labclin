@@ -28,3 +28,7 @@ urlpatterns = [
 handler403 = "config.views.handler403"
 handler404 = "config.views.handler404"
 handler500 = "config.views.handler500"
+
+from django.conf import settings as _settings
+from django.conf.urls.static import static as _static
+urlpatterns += _static(_settings.MEDIA_URL, document_root=_settings.MEDIA_ROOT)

@@ -49,6 +49,7 @@ def generar_pdf_reporte(paciente, expedientes):
             "paciente": paciente,
             "expedientes_datos": expedientes_datos,
             "lab": lab,
+            "logo_path": lab.logo.path if lab.logo else None,
             "nombre_firma": nombre_firma,
             "registro_firma": registro_firma,
             "fecha_generacion": timezone.now(),

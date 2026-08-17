@@ -12,6 +12,13 @@ class DatosLaboratorio(models.Model):
     ciudad = models.CharField(max_length=80, blank=True)
     lema = models.CharField(max_length=120, blank=True)
     simbolo_moneda = models.CharField(max_length=5, default="Bs.")
+    logo = models.ImageField(
+        "Logo del laboratorio (PNG o JPG)",
+        upload_to="logo/",
+        null=True,
+        blank=True,
+        help_text="Se muestra en el encabezado de reportes y facturas en PDF",
+    )
     bioanalista_nombre = models.CharField(
         "Bioanalista para firma", max_length=120, blank=True
     )

@@ -44,6 +44,7 @@
         {% if lab.lema %}<div class="lema">"{{ lab.lema }}"</div>{% endif %}
       </td>
       <td style="text-align:right; vertical-align:top;">
+        {% if logo_path %}<img src="{{ logo_path }}" style="width:110px; margin-bottom:6px;" /><br>{% endif %}
         <div class="factura-num">FACTURA</div>
         <div class="factura-num">N° {{ factura.numero }}</div>
         {% if factura.numero_control %}

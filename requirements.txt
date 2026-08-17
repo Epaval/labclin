@@ -11,3 +11,4 @@ psycopg[binary]~=3.2
 redis~=5.0
 whitenoise[brotli]~=6.7
 xhtml2pdf~=0.2.16
+Pillow>=10
