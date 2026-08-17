@@ -2,6 +2,7 @@ from itertools import groupby
 
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+from django.db import models
 from django.db.models import Q
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect
@@ -109,13 +110,36 @@ class ExpedienteListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
     permission_required = "patients.view_expediente"
     template_name = "patients/expediente_list.html"
     context_object_name = "object_list"
-    paginate_by = 20
+    paginate_by = 6
 
     def get_queryset(self):
-        return (
+        qs = (
             Expediente.objects.select_related("paciente", "creado_por")
             .order_by("-fecha_creacion")
         )
+        # Filtro por estado (default: abiertas + procesando)
+        estado = self.request.GET.get("estado", "activas")
+        if estado == "cerradas":
+            qs = qs.filter(estado="cerrado")
+        elif estado == "todas":
+            pass
+        else:  # activas (default)
+            qs = qs.filter(estado__in=["abierto", "procesando"])
+        # Búsqueda por nombre o CI del paciente
+        q = self.request.GET.get("q", "").strip()
+        if q:
+            qs = qs.filter(
+                models.Q(paciente__nombres__icontains=q)
+                | models.Q(paciente__apellidos__icontains=q)
+                | models.Q(paciente__ci__icontains=q)
+            )
+        return qs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["q"] = self.request.GET.get("q", "")
+        context["estado"] = self.request.GET.get("estado", "activas")
+        return context
 
 
 class ExpedienteCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
