@@ -49,23 +49,10 @@ class DatosLaboratorio(models.Model):
 
     @property
     def logo_pdf_path(self):
-        """Ruta util para el PDF: convierte SVG a PNG cacheado si es necesario"""
+        """Ruta del logo para el PDF (xhtml2pdf renderiza SVG nativamente)"""
         if not self.logo:
             return None
-        path = self.logo.path
-        if path.lower().endswith(".svg"):
-            png = path + ".png"
-            if not os.path.exists(png) or os.path.getmtime(png) < os.path.getmtime(path):
-                try:
-                    from svglib.svglib import svg2rlg
-                    from reportlab.graphics import renderPM
-                    drawing = svg2rlg(path)
-                    if drawing:
-                        renderPM.drawToFile(drawing, png, fmt="PNG", dpi=150)
-                except Exception:
-                    return None
-            return png if os.path.exists(png) else None
-        return path
+        return self.logo.path
 
     @classmethod
     def cargar(cls):
