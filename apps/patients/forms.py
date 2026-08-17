@@ -31,6 +31,18 @@ class PacienteForm(forms.ModelForm):
             raise forms.ValidationError("La fecha de nacimiento no puede ser futura")
         return fecha
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # En edición, la fecha de nacimiento es inmutable (solo lectura)
+        if self.instance and self.instance.pk:
+            fecha_formateada = self.instance.fecha_nac.strftime("%d/%m/%Y") if self.instance.fecha_nac else ""
+            self.fields["fecha_nac"].widget = forms.TextInput(attrs={
+                "readonly": True,
+                "value": fecha_formateada,
+                "class": "bg-slate-100 cursor-not-allowed",
+            })
+            self.fields["fecha_nac"].help_text = "La fecha de nacimiento no se puede modificar"
+
 
 class ExpedienteForm(forms.ModelForm):
     examenes = forms.ModelMultipleChoiceField(
