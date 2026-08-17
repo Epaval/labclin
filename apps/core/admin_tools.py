@@ -1,3 +1,6 @@
+import os
+from pathlib import Path
+from django.conf import settings
 """Herramientas de administracion: exclusivas del superusuario"""
 import json
 from datetime import date as hoy_date, timedelta
@@ -139,10 +142,29 @@ class FacturaExportarExcelView(SoloSuperUser, TemplateView):
                 wd.append([f.numero_control, f.numero, d.examen.nombre_completo, d.cantidad, float(d.precio_unitario), float(d.subtotal)])
 
         nombre = f"facturacion_{desde or 'inicio'}_{hasta or 'hoy'}.xlsx"
-        response = HttpResponse(content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-        response["Content-Disposition"] = f'attachment; filename="{nombre}"'
-        wb.save(response)
-        return response
+        
+        if getattr(settings, 'ESCRITORIO', False):
+            # Modo escritorio: guardar en disco y abrir en Excel
+            export_dir = Path(settings.DATA_DIR) / "exportaciones"
+            export_dir.mkdir(parents=True, exist_ok=True)
+            ruta = export_dir / nombre
+            wb.save(str(ruta))
+            messages.success(request, f"Archivo guardado en: {ruta}")
+            try:
+                if os.name == 'nt':  # Windows
+                    os.startfile(ruta)
+                else:  # Linux/Mac
+                    import subprocess
+                    subprocess.run(['xdg-open', str(ruta)])
+            except Exception as e:
+                messages.warning(request, f"No se pudo abrir automáticamente. Ruta: {ruta}")
+            return redirect(request.path)
+        else:
+            # Modo web: descarga HTTP normal
+            response = HttpResponse(content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+            response["Content-Disposition"] = f'attachment; filename="{nombre}"'
+            wb.save(response)
+            return response
 
 
 class EstadisticasView(SoloSuperUser, TemplateView):
