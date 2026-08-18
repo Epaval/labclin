@@ -25,6 +25,13 @@
         </svg>
         Nuevo examen
       </a>
+        <a href="{% url 'exams:ajuste_masivo' %}"
+           class="inline-flex items-center gap-2 bg-violet-500 hover:bg-violet-600 text-white text-sm font-semibold px-4 py-2.5 rounded-lg shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+          </svg>
+          Ajuste masivo
+        </a>
     {% endif %}
   </div>
 
@@ -111,7 +118,7 @@
             </td>
             <td class="px-6 py-4 text-right">
               {% if perms.exams.change_examen %}
-                <a href="{% url 'exams:update' examen.pk %}"
+                <a href="{% url 'exams:update' examen.pk %}?next={{ request.get_full_path|urlencode }}"
                    class="inline-flex items-center gap-1.5 text-sm font-medium text-sky-600 hover:text-sky-800 hover:bg-sky-50 px-3 py-1.5 rounded-lg transition-colors">
                   <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>

@@ -19,6 +19,13 @@ class ExamenForm(forms.ModelForm):
         help_text="Precio que cobra el laboratorio por este examen",
     )
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["perfil"].widget.attrs.update({
+            "list": "perfiles-datalist",
+            "placeholder": "Ej: Hematologia, perfil15, perfil20...",
+        })
+
     class Meta:
         model = Examen
         fields = [

@@ -11,6 +11,8 @@
 
     <form method="post" class="p-6">
       {% csrf_token %}
+      {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+      {% if datalist_perfiles %}<datalist id="perfiles-datalist">{% for p in datalist_perfiles %}<option value="{{ p }}">{% endfor %}</datalist>{% endif %}
 
       {% if form.non_field_errors %}
         <div class="mb-5 px-4 py-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm">
