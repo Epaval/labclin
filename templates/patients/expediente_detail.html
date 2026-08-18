@@ -181,19 +181,15 @@
                 </a>
               {% endif %}
               {% if perms.results.delete_result and r.estado == 'borrador' %}
-                <form method="post" action="{% url 'patients:eliminar_resultado' expediente.pk r.pk %}" 
-                      onsubmit="return confirm('¿Eliminar \'{{ r.examen.nombre_completo|escapejs }}\' de esta orden?');"
-                      class="inline">
-                  {% csrf_token %}
-                  <button type="submit" 
-                          class="inline-flex items-center gap-1 text-red-600 hover:bg-red-50 text-sm font-semibold px-3 py-1.5 rounded-lg transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <polyline points="3 6 5 6 21 6"/>
-                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                    </svg>
-                    Eliminar
-                  </button>
-                </form>
+                <button type="button"
+                        onclick="abrirModalEliminar('{{ r.examen.nombre_completo|escapejs }}', '{% url 'patients:eliminar_resultado' expediente.pk r.pk %}')"
+                        class="inline-flex items-center gap-1 text-red-600 hover:bg-red-50 text-sm font-semibold px-3 py-1.5 rounded-lg transition-colors">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="3 6 5 6 21 6"/>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                  </svg>
+                  Eliminar
+                </button>
               {% endif %}
               </div>
             </td>
@@ -285,4 +281,54 @@
   });
 </script>
 
+
+<!-- Modal de confirmación: eliminar examen -->
+<div id="modal-eliminar-backdrop"
+     class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[9998] hidden"></div>
+
+<div id="modal-eliminar"
+     class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl shadow-2xl max-w-md w-[90%] z-[9999] hidden animate-modal-pop overflow-hidden">
+  <div class="p-8 text-center">
+    <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-red-100 flex items-center justify-center">
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-red-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="3 6 5 6 21 6"/>
+        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+        <line x1="10" y1="11" x2="10" y2="17"/>
+        <line x1="14" y1="11" x2="14" y2="17"/>
+      </svg>
+    </div>
+    <h3 class="text-lg font-bold text-slate-900 mb-2">¿Eliminar examen?</h3>
+    <p class="text-sm text-slate-500 mb-6">
+      Se eliminará <span id="modal-eliminar-nombre" class="font-semibold text-slate-800"></span>
+      de esta orden. Esta acción no se puede deshacer.
+    </p>
+    <form id="modal-eliminar-form" method="post">
+      {% csrf_token %}
+      <div class="flex gap-3 justify-center">
+        <button type="button" onclick="cerrarModalEliminar()"
+                class="px-5 py-2.5 bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 text-sm font-semibold rounded-lg transition-colors">
+          Cancelar
+        </button>
+        <button type="submit"
+                class="px-5 py-2.5 bg-red-500 hover:bg-red-600 text-white text-sm font-semibold rounded-lg shadow-sm transition-colors">
+          Sí, eliminar
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  function abrirModalEliminar(nombre, url) {
+    document.getElementById('modal-eliminar-nombre').textContent = nombre;
+    document.getElementById('modal-eliminar-form').action = url;
+    document.getElementById('modal-eliminar-backdrop').classList.remove('hidden');
+    document.getElementById('modal-eliminar').classList.remove('hidden');
+  }
+  function cerrarModalEliminar() {
+    document.getElementById('modal-eliminar-backdrop').classList.add('hidden');
+    document.getElementById('modal-eliminar').classList.add('hidden');
+  }
+  document.getElementById('modal-eliminar-backdrop').addEventListener('click', cerrarModalEliminar);
+</script>
 {% endblock %}
