@@ -4,6 +4,7 @@ from .api import BuscarPacientesView
 from .views import (
     ExpedienteCreateView,
     ExpedienteDetailView,
+    EliminarResultadoView,
     ExpedienteListView,
     PacienteCreateView,
     PacienteHistorialView,
@@ -26,4 +27,5 @@ urlpatterns = [
     path("ordenes/", ExpedienteListView.as_view(), name="orden_list"),
     path("ordenes/nueva/", ExpedienteCreateView.as_view(), name="orden_create"),
     path("ordenes/<int:pk>/", ExpedienteDetailView.as_view(), name="orden_detail"),
+    path("ordenes/<int:pk>/resultado/<int:resultado_pk>/eliminar/", EliminarResultadoView.as_view(), name="eliminar_resultado"),
 ]

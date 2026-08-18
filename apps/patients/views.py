@@ -1,3 +1,4 @@
+from django.shortcuts import redirect
 from itertools import groupby
 
 from django.contrib import messages
@@ -210,3 +211,32 @@ class ExpedienteDetailView(LoginRequiredMixin, PermissionRequiredMixin, DetailVi
             self.object.resultados.exclude(estado="borrador").exclude(estado="anulado").count()
         )
         return context
+
+
+class EliminarResultadoView(LoginRequiredMixin, PermissionRequiredMixin, View):
+    permission_required = "results.delete_result"
+
+    def post(self, request, pk, resultado_pk):
+        resultado = get_object_or_404(Resultado, pk=resultado_pk, expediente__pk=pk)
+        
+        # Validación: solo se puede eliminar si está en borrador
+        if resultado.estado != "borrador":
+            messages.error(
+                request,
+                f"No se puede eliminar '{resultado.examen.nombre_completo}' porque ya fue cargado o validado."
+            )
+            return redirect("patients:orden_detail", pk=pk)
+        
+        # Validación: no eliminar si ya está en factura
+        from apps.billing.models import DetalleFactura
+        if DetalleFactura.objects.filter(examen=resultado.examen, factura__expediente=resultado.expediente).exists():
+            messages.error(
+                request,
+                f"No se puede eliminar '{resultado.examen.nombre_completo}' porque ya fue facturado."
+            )
+            return redirect("patients:orden_detail", pk=pk)
+        
+        nombre_examen = resultado.examen.nombre_completo
+        resultado.delete()
+        messages.success(request, f"Examen '{nombre_examen}' eliminado de la orden.")
+        return redirect("patients:orden_detail", pk=pk)

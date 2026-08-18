@@ -171,6 +171,7 @@
               </span>
             </td>
             <td class="px-6 py-4 text-right">
+              <div class="flex items-center justify-end gap-2">
               {% if perms.results.editar_result %}
                 <a href="{% url 'results:update' r.pk %}"
                    class="inline-flex items-center gap-1.5 text-sm font-semibold
@@ -178,6 +179,23 @@
                      px-3 py-1.5 rounded-lg transition-colors">
                   {% if r.estado == 'borrador' %}Cargar{% else %}Editar{% endif %}
                 </a>
+              {% endif %}
+              {% if perms.results.delete_result and r.estado == 'borrador' %}
+                <form method="post" action="{% url 'patients:eliminar_resultado' expediente.pk r.pk %}" 
+                      onsubmit="return confirm('¿Eliminar \'{{ r.examen.nombre_completo|escapejs }}\' de esta orden?');"
+                      class="inline">
+                  {% csrf_token %}
+                  <button type="submit" 
+                          class="inline-flex items-center gap-1 text-red-600 hover:bg-red-50 text-sm font-semibold px-3 py-1.5 rounded-lg transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="3 6 5 6 21 6"/>
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                    </svg>
+                    Eliminar
+                  </button>
+                </form>
+              {% endif %}
+              </div>
               {% endif %}
             </td>
           </tr>
