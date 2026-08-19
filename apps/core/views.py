@@ -1,3 +1,5 @@
+from django.db.models import Q
+from django.views.generic import TemplateView
 import sqlite3
 from datetime import datetime
 
@@ -39,3 +41,30 @@ class BackupView(LoginRequiredMixin, View):
         except Exception as e:
             messages.error(request, f"Error al crear respaldo: {str(e)}")
             return redirect("dashboard")
+
+
+class BusquedaGlobalView(LoginRequiredMixin, TemplateView):
+    """Búsqueda unificada: pacientes, órdenes y exámenes."""
+    template_name = "core/busqueda_global.html"
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        q = self.request.GET.get("q", "").strip()
+        ctx["q"] = q
+        if q and len(q) >= 2:
+            from apps.patients.models import Paciente, Expediente
+            from apps.exams.models import Examen
+            from django.db.models import Q
+
+            ctx["pacientes"] = Paciente.objects.filter(
+                Q(nombres__icontains=q) | Q(apellidos__icontains=q) | Q(ci__icontains=q)
+            ).filter(activo=True)[:10]
+
+            ctx["ordenes"] = Expediente.objects.filter(
+                Q(paciente__nombres__icontains=q) | Q(paciente__apellidos__icontains=q) | Q(paciente__ci__icontains=q)
+            ).select_related("paciente").order_by("-fecha_creacion")[:10]
+
+            ctx["examenes"] = Examen.objects.filter(
+                Q(nombre_completo__icontains=q) | Q(perfil__icontains=q)
+            ).filter(activo=True)[:10]
+        return ctx

@@ -130,6 +130,10 @@
               </svg>
               <span class="text-sm font-medium">Exámenes</span>
             </a>
+          <a href="{% url 'exams:perfiles' %}" class="sidebar-link flex items-center gap-3">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+            <span class="text-sm font-medium">Perfiles</span>
+          </a>
           {% endif %}
         </div>
       </div>
@@ -244,7 +248,16 @@
           {{ user.nombres|first }}{{ user.apellidos|first }}
         </div>
       </div>
-    </div>
+        <form method="get" action="{% url 'busqueda_global' %}" class="flex-1 max-w-md mx-auto">
+      <div class="relative">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input type="text" name="q" value="{{ request.GET.q }}" placeholder="Buscar pacientes, órdenes, exámenes..."
+               class="w-full pl-9 pr-4 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent outline-none">
+      </div>
+    </form>
+</div>
   </header>
 
   <!-- Contenido principal -->

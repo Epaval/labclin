@@ -1,4 +1,4 @@
-from apps.core.views import BackupView
+from apps.core.views import BackupView, BusquedaGlobalView
 from apps.core.views_activacion import ActivacionView
 from django.contrib import admin
 from django.urls import include, path
@@ -10,6 +10,7 @@ from apps.core.admin_tools import AjusteMasivoPreciosView, EstadisticasView, Fac
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("", DashboardView.as_view(), name="dashboard"),
+    path("buscar/", BusquedaGlobalView.as_view(), name="busqueda_global"),
     path("admin-lab/estadisticas/", EstadisticasView.as_view(), name="estadisticas"),
     path("admin-lab/exportar-excel/", FacturaExportarExcelView.as_view(), name="exportar_excel"),
     path("admin-lab/ajuste-precios/", AjusteMasivoPreciosView.as_view(), name="ajuste_masivo"),

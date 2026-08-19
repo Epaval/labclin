@@ -74,3 +74,17 @@ class CostoExamen(models.Model):
             ).exclude(pk=self.pk).update(activo=False)
 
         super().save(*args, **kwargs)
+
+
+class Perfil(models.Model):
+    """Perfil personalizado: paquete de examenes seleccionables (M2M)."""
+    nombre = models.CharField(max_length=120, unique=True)
+    examenes = models.ManyToManyField(Examen, related_name="perfiles_custom", blank=True)
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "perfil"
+        ordering = ["nombre"]
+
+    def __str__(self):
+        return self.nombre

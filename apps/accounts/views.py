@@ -1,3 +1,6 @@
+from django.utils import timezone
+from django.db import models
+from apps.billing.models import Factura
 from datetime import date
 from django.conf import settings
 from django.contrib import messages
@@ -12,7 +15,7 @@ from django.views.generic import CreateView, ListView, TemplateView, UpdateView
 
 from apps.doctors.models import Medico
 from apps.exams.models import Examen
-from apps.patients.models import Paciente
+from apps.patients.models import Paciente, Expediente
 from apps.results.models import Resultado
 
 from .forms import (
@@ -40,6 +43,36 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             activo=True,
         ).distinct().count()
         context["modo_escritorio"] = settings.ESCRITORIO
+
+        # Métricas de órdenes
+        context["ordenes_abiertas"] = Expediente.objects.filter(estado__in=["abierto", "procesando"]).count()
+        context["ordenes_cerradas_hoy"] = Expediente.objects.filter(
+            estado="cerrado",
+            fecha_creacion__date=date.today()
+        ).count()
+
+        # Ingresos del día (facturas emitidas)
+        context["ingresos_hoy"] = Factura.objects.filter(
+            fecha_creacion__date=date.today(),
+            estado="emitida"
+        ).aggregate(total=models.Sum("total"))["total"] or 0
+
+        # Ingresos del mes
+        primer_dia_mes = date.today().replace(day=1)
+        context["ingresos_mes"] = Factura.objects.filter(
+            fecha_creacion__date__gte=primer_dia_mes,
+            estado="emitida"
+        ).aggregate(total=models.Sum("total"))["total"] or 0
+
+        # Top 5 exámenes más solicitados (últimos 30 días)
+        treinta_dias = timezone.now() - timezone.timedelta(days=30)
+        context["top_examenes"] = (
+            Resultado.objects.filter(fecha_creacion__gte=treinta_dias)
+            .values("examen__nombre_completo")
+            .annotate(total=models.Count("id"))
+            .order_by("-total")[:5]
+        )
+
         return context
 
 

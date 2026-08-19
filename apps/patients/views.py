@@ -11,7 +11,7 @@ from django.urls import reverse_lazy
 from django.views import View
 from django.views.generic import CreateView, DetailView, ListView, UpdateView
 
-from apps.exams.models import Examen
+from apps.exams.models import Examen, Perfil
 from apps.results.models import Resultado
 
 from .forms import ExpedienteForm, PacienteForm
@@ -160,6 +160,14 @@ class ExpedienteCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateVi
         for perfil, items in groupby(examenes, key=lambda e: e.perfil or "General"):
             perfiles.append({"nombre": perfil, "examenes": list(items)})
         context["perfiles"] = perfiles
+        context["perfiles_custom"] = [
+            {
+                "nombre": p.nombre,
+                "pks": ",".join(str(pk) for pk in p.examenes.values_list("pk", flat=True)),
+                "total": p.examenes.count(),
+            }
+            for p in Perfil.objects.all()
+        ]
         return context
 
     def form_valid(self, form):

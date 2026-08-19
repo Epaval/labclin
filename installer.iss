@@ -1,11 +1,11 @@
 [Setup]
 AppName=Lab Clínico
-AppVersion=0.0.36
+AppVersion=0.0.38
 AppPublisher=Tu Laboratorio Software
 DefaultDirName={autopf}\LabClinico
 DefaultGroupName=Lab Clínico
 OutputDir=instalador
-OutputBaseFilename=LabClinico-Setup-0.0.36
+OutputBaseFilename=LabClinico-Setup-0.0.38
 Compression=lzma2/max
 SolidCompression=yes
 PrivilegesRequired=lowest

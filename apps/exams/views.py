@@ -1,3 +1,5 @@
+from django.views import View
+from django.shortcuts import get_object_or_404
 from decimal import Decimal
 from django.shortcuts import redirect
 from django.contrib import messages
@@ -8,7 +10,7 @@ from django.urls import reverse_lazy
 from django.views.generic import CreateView, ListView, UpdateView
 
 from .forms import ExamenForm
-from .models import CostoExamen, Examen
+from .models import CostoExamen, Examen, Perfil
 
 
 class ExamenListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
@@ -112,3 +114,64 @@ class AjusteMasivoView(LoginRequiredMixin, PermissionRequiredMixin, TemplateView
         ctx["porcentaje"] = porcentaje
         ctx["preview"] = self._preview(porcentaje)
         return self.render_to_response(ctx)
+
+
+class PerfilBuilderView(LoginRequiredMixin, PermissionRequiredMixin, TemplateView):
+    """Crea/edita perfiles personalizados seleccionando examenes con checkboxes."""
+    template_name = "exams/perfil_builder.html"
+    permission_required = "exams.add_examen"
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        editar_id = self.request.GET.get("editar")
+        perfil_editar = None
+        seleccion = set()
+        nombre_inicial = ""
+        if editar_id:
+            perfil_editar = Perfil.objects.filter(pk=editar_id).first()
+            if perfil_editar:
+                seleccion = set(perfil_editar.examenes.values_list("pk", flat=True))
+                nombre_inicial = perfil_editar.nombre
+        grupos_dict = {}
+        for ex in Examen.objects.filter(activo=True).order_by("perfil", "nombre_completo"):
+            grupos_dict.setdefault(ex.perfil or "Sin perfil", []).append(
+                {"ex": ex, "checked": ex.pk in seleccion}
+            )
+        ctx["grupos"] = sorted(grupos_dict.items())
+        ctx["perfil_editar"] = perfil_editar
+        ctx["nombre_inicial"] = nombre_inicial
+        ctx["perfiles_existentes"] = Perfil.objects.all()
+        return ctx
+
+    def post(self, request, *args, **kwargs):
+        nombre = request.POST.get("nombre", "").strip()
+        perfil_id = request.POST.get("perfil_id", "")
+        seleccion = request.POST.getlist("examenes")
+        if not nombre:
+            messages.error(request, "El nombre del perfil es obligatorio.")
+            return redirect("exams:perfiles")
+        perfil = Perfil.objects.filter(pk=perfil_id).first() if perfil_id else None
+        if perfil:
+            perfil.nombre = nombre
+            perfil.save()
+            perfil.examenes.set(Examen.objects.filter(pk__in=seleccion))
+            messages.success(request, f"Perfil '{nombre}' actualizado con {len(seleccion)} examenes.")
+        else:
+            if Perfil.objects.filter(nombre__iexact=nombre).exists():
+                messages.error(request, f"Ya existe un perfil llamado '{nombre}'.")
+                return redirect("exams:perfiles")
+            perfil = Perfil.objects.create(nombre=nombre)
+            perfil.examenes.set(Examen.objects.filter(pk__in=seleccion))
+            messages.success(request, f"Perfil '{nombre}' creado con {len(seleccion)} examenes.")
+        return redirect("exams:perfiles")
+
+
+class PerfilDeleteView(LoginRequiredMixin, PermissionRequiredMixin, View):
+    permission_required = "exams.add_examen"
+
+    def post(self, request, pk):
+        perfil = get_object_or_404(Perfil, pk=pk)
+        nombre = perfil.nombre
+        perfil.delete()
+        messages.success(request, f"Perfil '{nombre}' eliminado.")
+        return redirect("exams:perfiles")
