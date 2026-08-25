@@ -334,21 +334,21 @@ def main():
     call_command("migrate", interactive=False, verbosity=0)
     try:
         # Import directo: garantiza que PyInstaller empaquete los comandos en el exe
-        from apps.accounts.management.commands import seed_datos, seed_roles  # noqa: F401
+        from apps.accounts.management.commands import seed_catalogo, seed_roles  # noqa: F401
         from apps.exams.models import Examen
         # Solo si falta el bloque de orina (instalaciones existentes).
         # Instalación nueva ya lo trae el bootstrap normal; no re-sembrar después.
         if not Examen.objects.filter(nombre_completo="Color orina").exists():
             import io as _io
             _buf = _io.StringIO()
-            call_command("seed_datos", stdout=_buf, stderr=_buf)
+            call_command("seed_catalogo", stdout=_buf, stderr=_buf)
             _out = _buf.getvalue()
             from datetime import datetime as _dt
             with open(os.path.join(DATA_BASE, "launcher.log"), "a", encoding="utf-8") as _f:
                 _f.write(f"[{_dt.now()}] seed_datos (orina faltaba):\n{_out}\n")
             print(f"[seed] ejecutado: {Examen.objects.count()} exámenes en BD")
         else:
-            print(f"[seed] omitido: orina ya existe ({Examen.objects.count()} exámenes)")
+            print(f"[seed_catalogo] omitido: orina ya existe ({Examen.objects.count()} exámenes)")
     except Exception as e:
         print(f"[seed] aviso: {e}")
     

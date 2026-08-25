@@ -3,6 +3,7 @@ from PyInstaller.utils.hooks import collect_submodules, collect_data_files
 
 hiddenimports = [
     "apps.accounts.management.commands.seed_datos",
+    "apps.accounts.management.commands.seed_catalogo",
     "apps.accounts.management.commands.seed_roles",
     # Terceros usados en apps/config (archivos fuente, no se analizan solos)
     'environ', 'django_environ',
