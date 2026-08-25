@@ -333,7 +333,13 @@ def main():
     from django.core.management import call_command
     call_command("migrate", interactive=False, verbosity=0)
     try:
-        call_command("seed_datos")
+        # Import directo: garantiza que PyInstaller empaquete los comandos en el exe
+        from apps.accounts.management.commands import seed_datos, seed_roles  # noqa: F401
+        from apps.exams.models import Examen
+        # Solo si falta el bloque de orina (instalaciones existentes).
+        # Instalación nueva ya lo trae el bootstrap normal; no re-sembrar después.
+        if not Examen.objects.filter(nombre_completo="Color orina").exists():
+            call_command("seed_datos")
     except Exception as e:
         print(f"[seed] aviso: {e}")
     
