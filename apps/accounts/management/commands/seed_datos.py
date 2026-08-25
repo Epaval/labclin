@@ -3,6 +3,7 @@ from datetime import date, timedelta
 from decimal import Decimal
 
 from django.contrib.auth import get_user_model
+from django.core.management import call_command
 from django.core.management.base import BaseCommand
 from django.db import transaction
 from django.utils import timezone
@@ -116,22 +117,12 @@ class Command(BaseCommand):
         # con constraints que puedan fallar sin tirar el catálogo de exámenes.
         errores = []
 
-        self.stdout.write(self.style.NOTICE("Creando exámenes..."))
+        self.stdout.write(self.style.NOTICE("Creando exámenes (catálogo único)..."))
         try:
-            self._seed_examenes()
+            call_command("seed_catalogo")
         except Exception as e:
             errores.append(f"exámenes: {e}")
             self.stdout.write(self.style.ERROR(f"  ⚠ error en exámenes: {e}"))
-
-        # Paquete de uroanálisis (idempotente)
-        try:
-            from django.db.models import Q as _Qorina
-            perfil_orina, _ = Perfil.objects.get_or_create(nombre="Examen de Orina (Uroanálisis)")
-            perfil_orina.examenes.set(Examen.objects.filter(_Qorina(perfil__startswith="Orina ·") | _Qorina(nombre_completo="Uroanálisis completo")))
-            self.stdout.write(f"  Perfil uroanálisis: {perfil_orina.examenes.count()} exámenes")
-        except Exception as e:
-            errores.append(f"perfil_orina: {e}")
-            self.stdout.write(self.style.ERROR(f"  ⚠ error en perfil orina: {e}"))
 
         self.stdout.write(self.style.NOTICE("Creando pacientes..."))
         try:
