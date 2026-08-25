@@ -352,3 +352,8 @@ form ul:not(.errorlist) li label {
 .dark table th { background-color: #1e293b !important; color: #94a3b8 !important; }
 .dark table td { border-color: #334155 !important; }
 .dark .bg-white\/95 { background-color: rgba(30,41,59,.95) !important; }
+
+/* ===== MODO OSCURO: fondos translúcidos ===== */
+.dark [class*="bg-white/"] { background-color: rgba(30,41,59,.7) !important; }
+.dark [class*="bg-slate-50/"], .dark [class*="bg-slate-100/"], .dark [class*="bg-slate-200/"] { background-color: rgba(30,41,59,.7) !important; }
+.dark [class*="bg-white/"] .text-slate-500, .dark [class*="bg-white/"] .text-slate-600 { color: #cbd5e1 !important; }
