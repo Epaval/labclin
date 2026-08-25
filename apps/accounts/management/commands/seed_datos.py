@@ -9,7 +9,7 @@ from django.utils import timezone
 
 from apps.accounts.models import Rol, Salario
 from apps.doctors.models import Medico
-from apps.exams.models import CostoExamen, Examen
+from apps.exams.models import CostoExamen, Examen, Perfil
 from apps.patients.models import Paciente
 
 Empleado = get_user_model()
@@ -114,6 +114,12 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         self.stdout.write(self.style.NOTICE("Creando exámenes..."))
         self._seed_examenes()
+
+        # Paquete de uroanálisis (idempotente)
+        from django.db.models import Q as _Qorina
+        perfil_orina, _ = Perfil.objects.get_or_create(nombre="Examen de Orina (Uroanálisis)")
+        perfil_orina.examenes.set(Examen.objects.filter(_Qorina(perfil__startswith="Orina ·") | _Qorina(nombre_completo="Uroanálisis completo")))
+        self.stdout.write(f"  Perfil uroanálisis: {perfil_orina.examenes.count()} exámenes")
 
         self.stdout.write(self.style.NOTICE("Creando pacientes..."))
         self._seed_pacientes()

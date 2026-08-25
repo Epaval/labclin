@@ -332,6 +332,10 @@ def main():
 
     from django.core.management import call_command
     call_command("migrate", interactive=False, verbosity=0)
+    try:
+        call_command("seed_datos")
+    except Exception as e:
+        print(f"[seed] aviso: {e}")
     
     # Sincronizar roles/permisos en CADA arranque (idempotente),
     # antes de iniciar el servidor, con registro en archivo
