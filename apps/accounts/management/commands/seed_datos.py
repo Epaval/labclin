@@ -53,6 +53,26 @@ EXAMENES = [
 
     # Otros
     ("Uroanálisis completo", "Uroanálisis", "pH: 4.5-8.0. Densidad: 1.005-1.030. Sin proteínas, glucosa ni sangre."),
+    # ---- Orina · Físicos ----
+    ("Color orina", "Orina · Físicos", "Amarillo claro a ámbar (variable con hidratación)."),
+    ("Transparencia orina", "Orina · Físicos", "Transparente. Turbia sugiere cristales, bacterias o leucocitos."),
+    ("Densidad orina", "Orina · Físicos", "1.005 - 1.030"),
+    ("Olor orina", "Orina · Físicos", "Característico suave. Amoniacal o fétido sugiere infección."),
+    # ---- Orina · Químicos (tira reactiva) ----
+    ("pH urinario", "Orina · Químicos", "4.5 - 8.0 (promedio ~6.0)"),
+    ("Proteínas en orina", "Orina · Químicos", "Negativo a trazas. Positivo sugiere proteinuria."),
+    ("Glucosa en orina", "Orina · Químicos", "Negativo. Positivo sugiere glucemia >180 mg/dL."),
+    ("Cetonas en orina", "Orina · Químicos", "Negativo. Positivo sugiere cetosis o cetoacidosis."),
+    ("Nitritos en orina", "Orina · Químicos", "Negativo. Positivo sugiere bacteriuria por gram negativos."),
+    ("Leucocitos (esterasa)", "Orina · Químicos", "Negativo. Positivo sugiere infección urinaria."),
+    ("Sangre en orina", "Orina · Químicos", "Negativo. Positivo: hematuria o hemoglobinuria."),
+    # ---- Orina · Microscópico ----
+    ("Glóbulos rojos en sedimento", "Orina · Microscópico", "0 - 3 por campo. Hematuria: >3/campo."),
+    ("Glóbulos blancos en sedimento", "Orina · Microscópico", "0 - 5 por campo. Piuria: >5/campo."),
+    ("Bacterias en sedimento", "Orina · Microscópico", "Ausentes o escasas. Abundantes sugieren bacteriuria."),
+    ("Cristales en sedimento", "Orina · Microscópico", "Ausentes o escasos (tipo depende del pH)."),
+    ("Células epiteliales en sedimento", "Orina · Microscópico", "Escasas. Abundantes sugieren contaminación."),
+
     ("Prueba de embarazo (hCG)", "Hormonas", "Negativo: <5 mUI/mL. Positivo: >25 mUI/mL."),
 ]
 
