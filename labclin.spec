@@ -6,35 +6,34 @@ hiddenimports = [
     "apps.accounts.management.commands.seed_roles",
     # Terceros usados en apps/config (archivos fuente, no se analizan solos)
     'environ', 'django_environ',
-] + [
-    # Django completo (apps/config son fuente y cargan módulos dinámicamente)
-] + collect_submodules('django')
-    # Nuestros paquetes de terceros
-    + collect_submodules('axes')
-    + collect_submodules('simple_history')
-    + collect_submodules('whitenoise')
-    + collect_submodules('waitress')
-    + collect_submodules('openpyxl')
-    + collect_submodules('xhtml2pdf')
-    + collect_submodules('reportlab')
-    + collect_submodules('html5lib')
-    + collect_submodules('pypdf')
-    + collect_submodules('svglib')
-    + collect_submodules('tinycss2')
-    + collect_submodules('cssselect2')
-    + [
-        'django.contrib.auth.backends.ModelBackend',
-        'django.contrib.auth.hashers.Argon2PasswordHasher',
-        'django.contrib.auth.hashers.PBKDF2PasswordHasher',
-        'django.core.cache.backends.locmem.LocMemCache',
-        'django.template.context_processors.debug',
-        'django.template.context_processors.request',
-        'django.template.context_processors.auth',
-        'django.template.context_processors.messages',
-        'html5lib', 'pypdf', 'PIL',
-        'openpyxl', 'svglib', 'tinycss2', 'cssselect2', 'argon2',
-        'argon2.exceptions', 'argon2.low_level',
-    ]
+]
+# Django completo (apps/config son fuente y cargan módulos dinámicamente)
+hiddenimports += collect_submodules('django')
+# Nuestros paquetes de terceros
+hiddenimports += collect_submodules('axes')
+hiddenimports += collect_submodules('simple_history')
+hiddenimports += collect_submodules('whitenoise')
+hiddenimports += collect_submodules('waitress')
+hiddenimports += collect_submodules('openpyxl')
+hiddenimports += collect_submodules('xhtml2pdf')
+hiddenimports += collect_submodules('reportlab')
+hiddenimports += collect_submodules('html5lib')
+hiddenimports += collect_submodules('pypdf')
+hiddenimports += collect_submodules('svglib')
+hiddenimports += collect_submodules('tinycss2')
+hiddenimports += collect_submodules('cssselect2')
+hiddenimports += [
+    'django.contrib.auth.backends.ModelBackend',
+    'django.contrib.auth.hashers.Argon2PasswordHasher',
+    'django.contrib.auth.hashers.PBKDF2PasswordHasher',
+    'django.core.cache.backends.locmem.LocMemCache',
+    'django.template.context_processors.debug',
+    'django.template.context_processors.request',
+    'django.template.context_processors.auth',
+    'django.template.context_processors.messages',
+    'html5lib', 'pypdf', 'PIL',
+    'openpyxl', 'svglib', 'tinycss2', 'cssselect2', 'argon2',
+    'argon2.exceptions', 'argon2.low_level',
 ]
 
 datas = [
