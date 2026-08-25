@@ -110,30 +110,57 @@ SALARIO_POR_ROL = {
 class Command(BaseCommand):
     help = "Carga datos de prueba: exámenes, pacientes, médicos y empleados"
 
-    @transaction.atomic
     def handle(self, *args, **options):
+        # Cada sección es independiente: si una falla, las demás quedan sembradas.
+        # Fundamental para instalaciones que actualizan y tienen empleados/pacientes
+        # con constraints que puedan fallar sin tirar el catálogo de exámenes.
+        errores = []
+
         self.stdout.write(self.style.NOTICE("Creando exámenes..."))
-        self._seed_examenes()
+        try:
+            self._seed_examenes()
+        except Exception as e:
+            errores.append(f"exámenes: {e}")
+            self.stdout.write(self.style.ERROR(f"  ⚠ error en exámenes: {e}"))
 
         # Paquete de uroanálisis (idempotente)
-        from django.db.models import Q as _Qorina
-        perfil_orina, _ = Perfil.objects.get_or_create(nombre="Examen de Orina (Uroanálisis)")
-        perfil_orina.examenes.set(Examen.objects.filter(_Qorina(perfil__startswith="Orina ·") | _Qorina(nombre_completo="Uroanálisis completo")))
-        self.stdout.write(f"  Perfil uroanálisis: {perfil_orina.examenes.count()} exámenes")
+        try:
+            from django.db.models import Q as _Qorina
+            perfil_orina, _ = Perfil.objects.get_or_create(nombre="Examen de Orina (Uroanálisis)")
+            perfil_orina.examenes.set(Examen.objects.filter(_Qorina(perfil__startswith="Orina ·") | _Qorina(nombre_completo="Uroanálisis completo")))
+            self.stdout.write(f"  Perfil uroanálisis: {perfil_orina.examenes.count()} exámenes")
+        except Exception as e:
+            errores.append(f"perfil_orina: {e}")
+            self.stdout.write(self.style.ERROR(f"  ⚠ error en perfil orina: {e}"))
 
         self.stdout.write(self.style.NOTICE("Creando pacientes..."))
-        self._seed_pacientes()
+        try:
+            self._seed_pacientes()
+        except Exception as e:
+            errores.append(f"pacientes: {e}")
+            self.stdout.write(self.style.ERROR(f"  ⚠ error en pacientes: {e}"))
 
         self.stdout.write(self.style.NOTICE("Creando médicos..."))
-        self._seed_medicos()
+        try:
+            self._seed_medicos()
+        except Exception as e:
+            errores.append(f"médicos: {e}")
+            self.stdout.write(self.style.ERROR(f"  ⚠ error en médicos: {e}"))
 
         self.stdout.write(self.style.NOTICE("Creando empleados..."))
-        self._seed_empleados()
+        try:
+            self._seed_empleados()
+        except Exception as e:
+            errores.append(f"empleados: {e}")
+            self.stdout.write(self.style.ERROR(f"  ⚠ error en empleados: {e}"))
 
-        self.stdout.write(self.style.SUCCESS("\n[OK] Datos de prueba cargados correctamente"))
-        self.stdout.write(self.style.WARNING(f"\nContraseña por defecto para empleados: {PASSWORD}"))
-        self.stdout.write(self.style.WARNING("Usuarios creados:"))
-        self.stdout.write("  jefe_lab1, bio1, bio2, bio3, aux1, aux2")
+        if errores:
+            self.stdout.write(self.style.WARNING(f"\n[PARCIAL] Datos sembrados con errores en: {', '.join(errores)}"))
+        else:
+            self.stdout.write(self.style.SUCCESS("\n[OK] Datos de prueba cargados correctamente"))
+            self.stdout.write(self.style.WARNING(f"\nContraseña por defecto para empleados: {PASSWORD}"))
+            self.stdout.write(self.style.WARNING("Usuarios creados:"))
+            self.stdout.write("  jefe_lab1, bio1, bio2, bio3, aux1, aux2")
 
     def _seed_examenes(self):
         for nombre, perfil, valores_ref in EXAMENES:
