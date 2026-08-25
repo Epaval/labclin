@@ -34,7 +34,7 @@ hiddenimports = [
         'openpyxl', 'svglib', 'tinycss2', 'cssselect2', 'argon2',
         'argon2.exceptions', 'argon2.low_level',
     ]
-)
+]
 
 datas = [
     ('templates', 'templates'),
