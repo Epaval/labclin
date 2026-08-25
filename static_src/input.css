@@ -340,3 +340,15 @@ form ul:not(.errorlist) li label {
 .dark .text-red-800, .dark .text-red-700, .dark .text-red-600 { color: #fca5a5 !important; }
 .dark .bg-amber-50, .dark .bg-amber-100 { background-color: rgba(120,53,15,.4) !important; }
 .dark .text-amber-800, .dark .text-amber-700 { color: #fcd34d !important; }
+
+/* ===== MODO OSCURO: refuerzos ===== */
+.dark .bg-slate-200 { background-color: #334155 !important; }
+.dark .bg-gray-50, .dark .bg-gray-100, .dark .bg-gray-200 { background-color: #1e293b !important; }
+.dark .text-gray-400, .dark .text-gray-500, .dark .text-gray-600, .dark .text-gray-700 { color: #94a3b8 !important; }
+.dark [class*="from-white"] { --tw-gradient-from: #1e293b !important; }
+.dark [class*="to-slate-50"] { --tw-gradient-to: #0f172a !important; }
+.dark [class*="to-white"] { --tw-gradient-to: #1e293b !important; }
+.dark .shadow-xl, .dark .shadow-2xl { box-shadow: 0 10px 30px rgba(0,0,0,.5) !important; }
+.dark table th { background-color: #1e293b !important; color: #94a3b8 !important; }
+.dark table td { border-color: #334155 !important; }
+.dark .bg-white\/95 { background-color: rgba(30,41,59,.95) !important; }
