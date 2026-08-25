@@ -75,7 +75,8 @@
     <div class="orden-titulo">Orden #{{ dato.expediente.pk }} — {{ dato.expediente.fecha_creacion|date:"d/m/Y" }}</div>
 
     {% for grupo in dato.grupos %}
-      <div class="perfil-titulo">Perfil: {{ grupo.perfil }}</div>
+      {% if grupo.cabecera_orina %}<div class="perfil-titulo" style="color:#0f172a;font-size:12px;border-bottom:2px solid #0369a1;padding-bottom:3px">EXAMEN DE ORINA (UROANÁLISIS)</div>{% endif %}
+      <div class="perfil-titulo">{% if grupo.es_orina %}{{ grupo.perfil|cut:"Orina · " }}{% else %}Perfil: {{ grupo.perfil }}{% endif %}</div>
       <table>
         <tr>
           <th style="width:34%;">Examen</th>

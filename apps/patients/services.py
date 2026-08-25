@@ -15,11 +15,24 @@ def _grupos_por_perfil(expediente):
         perfil = (r.examen.perfil or "Otros").strip() or "Otros"
         grupos.setdefault(perfil, []).append(r)
 
-    return [
+    items = [
         {"perfil": perfil, "resultados": resultados}
-        for perfil, resultados in sorted(grupos.items())
+        for perfil, resultados in grupos.items()
     ]
 
+    ORDEN_ORINA = {"Orina · Físicos": 0, "Orina · Químicos": 1, "Orina · Microscópico": 2}
+
+    def clave(it):
+        p = it["perfil"]
+        if p in ORDEN_ORINA:
+            return (0, ORDEN_ORINA[p], p)
+        return (1, 0, p)
+
+    items.sort(key=clave)
+    for i, it in enumerate(items):
+        it["es_orina"] = it["perfil"] in ORDEN_ORINA
+        it["cabecera_orina"] = it["es_orina"] and (i == 0 or not items[i - 1]["es_orina"])
+    return items
 
 def generar_pdf_reporte(paciente, expedientes):
     """Genera el reporte de resultados del paciente en PDF"""
