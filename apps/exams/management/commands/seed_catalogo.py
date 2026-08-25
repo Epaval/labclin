@@ -3,7 +3,9 @@ from decimal import Decimal
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
-from apps.exams.models import CostoExamen, Examen
+from django.db.models import Q
+
+from apps.exams.models import CostoExamen, Examen, Perfil
 
 # Precios de referencia por perfil (ajustalos a tu mercado)
 # Precios en 0: el laboratorio define sus propios precios
@@ -14,6 +16,7 @@ PRECIO_PERFIL = {
     "Hormonas": 0, "Marcadores Tumorales": 0, "Serologia / Infecciosas": 0,
     "Vitaminas y Minerales": 0, "Marcadores Cardiacos": 0,
     "Pancreas": 0, "Heces": 0, "Inmunologia": 0, "Otros": 0,
+    "Orina · Físicos": 0, "Orina · Químicos": 0, "Orina · Microscópico": 0,
 }
 
 CATALOGO = {
@@ -179,13 +182,34 @@ CATALOGO = {
         ("Amonio", "15-45 ug/dL"),
         ("Acido lactico", "0.5-2.2 mmol/L"),
     ],
+    "Orina · Físicos": [
+        ("Color orina", "Amarillo claro a ámbar (variable con hidratación)."),
+        ("Transparencia orina", "Transparente. Turbia sugiere cristales, bacterias o leucocitos."),
+        ("Densidad orina", "1.005 - 1.030"),
+        ("Olor orina", "Característico suave. Amoniacal o fétido sugiere infección."),
+    ],
+    "Orina · Químicos": [
+        ("pH urinario", "4.5 - 8.0 (promedio ~6.0)"),
+        ("Proteínas en orina", "Negativo a trazas. Positivo sugiere proteinuria."),
+        ("Glucosa en orina", "Negativo. Positivo sugiere glucemia >180 mg/dL."),
+        ("Cetonas en orina", "Negativo. Positivo sugiere cetosis o cetoacidosis."),
+        ("Nitritos en orina", "Negativo. Positivo sugiere bacteriuria por gram negativos."),
+        ("Leucocitos (esterasa)", "Negativo. Positivo sugiere infección urinaria."),
+        ("Sangre en orina", "Negativo. Positivo: hematuria o hemoglobinuria."),
+    ],
+    "Orina · Microscópico": [
+        ("Glóbulos rojos en sedimento", "0 - 3 por campo. Hematuria: >3/campo."),
+        ("Glóbulos blancos en sedimento", "0 - 5 por campo. Piuria: >5/campo."),
+        ("Bacterias en sedimento", "Ausentes o escasas. Abundantes sugiere bacteriuria."),
+        ("Cristales en sedimento", "Ausentes o escasos (tipo depende del pH)."),
+        ("Células epiteliales en sedimento", "Escasas. Abundantes sugieren contaminación."),
+    ],
 }
 
 
 class Command(BaseCommand):
     help = "Carga el catalogo completo de examenes de laboratorio por perfil"
 
-    @transaction.atomic
     def handle(self, *args, **options):
         nuevos = 0
         for perfil, examenes in CATALOGO.items():
@@ -210,6 +234,19 @@ class Command(BaseCommand):
                     CostoExamen.objects.create(
                         examen=examen, precio=precio, activo=True
                     )
+
+
+        # Perfil paquete de uroanálisis (idempotente)
+        try:
+            perfil_orina, _ = Perfil.objects.get_or_create(nombre="Examen de Orina (Uroanálisis)")
+            perfil_orina.examenes.set(
+                Examen.objects.filter(
+                    Q(perfil__startswith="Orina ·") | Q(nombre_completo="Uroanálisis completo")
+                )
+            )
+            self.stdout.write(f"  Perfil uroanálisis: {perfil_orina.examenes.count()} exámenes")
+        except Exception as e:
+            self.stdout.write(self.style.WARNING(f"  ⚠ perfil orina: {e}"))
 
         total = Examen.objects.count()
         self.stdout.write(self.style.SUCCESS(

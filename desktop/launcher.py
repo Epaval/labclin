@@ -334,7 +334,8 @@ def main():
     call_command("migrate", interactive=False, verbosity=0)
     try:
         # Import directo: garantiza que PyInstaller empaquete los comandos en el exe
-        from apps.accounts.management.commands import seed_catalogo, seed_roles  # noqa: F401
+        from apps.exams.management.commands import seed_catalogo
+        from apps.accounts.management.commands import seed_roles  # noqa: F401
         from apps.exams.models import Examen
         # Solo si falta el bloque de orina (instalaciones existentes).
         # Instalación nueva ya lo trae el bootstrap normal; no re-sembrar después.
