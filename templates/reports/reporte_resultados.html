@@ -107,17 +107,17 @@
     <table class="sin-borde firma">
       <tr>
         <td style="text-align:center;">
-          {% if firma_path or sello_path %}
-          <div style="height:80px;">
-            {% if sello_path %}<img src="{{ sello_path }}" style="height:80px; opacity:0.9;" />&nbsp;&nbsp;&nbsp;{% endif %}
-            {% if firma_path %}<img src="{{ firma_path }}" style="height:60px;" />{% endif %}
-          </div>
-          {% endif %}
           <div class="firma-linea">
             <div style="font-size:10px; font-weight:bold;">{{ nombre_firma }}</div>
             <div class="sub">Bioanalista{% if registro_firma %} · Reg. N° {{ registro_firma }}{% endif %}</div>
             <div class="sub">Firma y sello</div>
           </div>
+          {% if firma_path or sello_path %}
+          <div style="margin-top:6px;">
+            {% if sello_path %}<img src="{{ sello_path }}" style="height:80px; opacity:0.9;" />&nbsp;&nbsp;&nbsp;{% endif %}
+            {% if firma_path %}<img src="{{ firma_path }}" style="height:60px;" />{% endif %}
+          </div>
+          {% endif %}
         </td>
       </tr>
     </table>
