@@ -61,15 +61,11 @@ a = Analysis(
         'matplotlib', 'numpy', 'pandas', 'pytest',
         # Tkinter no se usa (ahorra ~30-40MB de Tcl/Tk)
         'tkinter', '_tkinter', 'Tkinter',
-        # Módulos innecesarios
-        'unittest', 'pydoc_data', 'doctest', 'lib2to3', 'idlelib', 'turtle',
-        'distutils', 'venv', 'ensurepip',
-        # Django modules no usados
+        # Módulos stdlib no usados (seguros de excluir)
+        'pydoc_data', 'doctest', 'lib2to3', 'idlelib', 'turtle',
+        # Django modules no usados (los demás son necesarios en web)
         'django.contrib.gis',
         'django.contrib.sites',
-        'django.contrib.messages',
-        'django.contrib.contenttypes',
-        'django.contrib.sessions',
         'django.contrib.syndication',
         'django.contrib.sitemaps',
     ],
