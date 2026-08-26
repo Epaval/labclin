@@ -65,169 +65,33 @@ def reportar_error(exc_texto):
 
 
 def pedir_ip_servidor(ip_actual=""):
-    """Asistente gráfico para pedir la IP del servidor (modo estación)"""
-    import tkinter as tk
-    from tkinter import ttk, messagebox
-
-    resultado = {"ip": None}
-
-    root = tk.Tk()
-    root.title("Lab Clínico - Conectar al servidor")
-    root.geometry("460x320")
-    root.resizable(False, False)
-    root.configure(bg="#f8fafc")
-
+    """Asistente CLI para pedir IP (sin tkinter, ahorra ~30MB de Tcl/Tk)"""
     try:
-        root.iconbitmap(default="")
+        import ctypes
+        user32 = ctypes.windll.user32
     except Exception:
-        pass
+        user32 = None
 
-    # Frame principal
-    frame = tk.Frame(root, bg="#f8fafc", padx=30, pady=25)
-    frame.pack(fill="both", expand=True)
-
-    # Título
-    titulo = tk.Label(
-        frame, text="Lab Clínico",
-        font=("Segoe UI", 20, "bold"),
-        bg="#f8fafc", fg="#0f172a",
-    )
-    titulo.pack(pady=(0, 5))
-
-    subtitulo = tk.Label(
-        frame, text="Conectar como estación",
-        font=("Segoe UI", 11),
-        bg="#f8fafc", fg="#64748b",
-    )
-    subtitulo.pack(pady=(0, 20))
-
-    # Etiqueta
-    label = tk.Label(
-        frame, text="IP del servidor (PC del laboratorio):",
-        font=("Segoe UI", 10, "bold"),
-        bg="#f8fafc", fg="#334155",
-        anchor="w",
-    )
-    label.pack(fill="x", pady=(0, 5))
-
-    # Campo de entrada
-    entry_ip = ttk.Entry(frame, font=("Consolas", 13))
-    entry_ip.insert(0, ip_actual)
-    entry_ip.pack(fill="x", ipady=6, pady=(0, 20))
-    entry_ip.focus_set()
-
-    def conectar():
-        ip = entry_ip.get().strip()
-        if not ip:
-            messagebox.showwarning("Atención", "Ingresa la IP del servidor")
-            return
-        resultado["ip"] = ip
-        root.destroy()
-
-    def cancelar():
-        resultado["ip"] = None
-        root.destroy()
-
-    # Frame de botones con altura fija
-    btn_frame = tk.Frame(frame, bg="#f8fafc")
-    btn_frame.pack(fill="x", pady=(0, 15))
-    btn_frame.columnconfigure(0, weight=1)
-    btn_frame.columnconfigure(1, weight=1)
-
-    btn_cancelar = tk.Button(
-        btn_frame, text="Cancelar", command=cancelar,
-        font=("Segoe UI", 10),
-        bg="#e2e8f0", fg="#334155",
-        activebackground="#cbd5e1",
-        relief="flat",
-        padx=20, pady=10,
-        cursor="hand2",
-    )
-    btn_cancelar.grid(row=0, column=0, sticky="ew", padx=(0, 8))
-
-    btn_conectar = tk.Button(
-        btn_frame, text="Conectar", command=conectar,
-        font=("Segoe UI", 10, "bold"),
-        bg="#0ea5e9", fg="white",
-        activebackground="#0284c7", activeforeground="white",
-        relief="flat",
-        padx=20, pady=10,
-        cursor="hand2",
-    )
-    btn_conectar.grid(row=0, column=1, sticky="ew", padx=(8, 0))
-
-    # Enter para conectar
-    entry_ip.bind("<Return>", lambda e: conectar())
-
-    # Nota al pie
-    nota = tk.Label(
-        frame,
-        text="Pregunta la IP al laboratorio principal.\nSe guardará para no volver a pedirla.",
-        font=("Segoe UI", 8),
-        bg="#f8fafc", fg="#94a3b8",
-        justify="center",
-    )
-    nota.pack(fill="x", pady=(5, 0))
-
-    # Ajustar la ventana al contenido real (respetando escalado del sistema)
-    root.update_idletasks()
-    req_w = max(root.winfo_reqwidth() + 20, 460)
-    req_h = max(root.winfo_reqheight() + 20, 340)
-    root.geometry(f"{req_w}x{req_h}")
+    print("\n" + "="*60)
+    print("  LAB CLÍNICO - Conexión en red (modo estación)")
+    print("="*60)
+    print(f"  IP actual: {ip_actual or '(no configurada)'}")
+    print("")
+    print("  Escribe la IP del servidor y presiona Enter.")
+    print("  Deja vacío y presiona Enter para cancelar.")
+    print("")
     try:
-        root.eval("tk::PlaceWindow . center")
-    except Exception:
-        pass
+        ip = input("  IP del servidor > ").strip()
+    except (EOFError, KeyboardInterrupt):
+        ip = ""
+    print("="*60)
 
-    root.protocol("WM_DELETE_WINDOW", cancelar)
-    root.mainloop()
+    if not ip:
+        if user32:
+            user32.MessageBoxW(0, "Conexión cancelada.", "Lab Clínico", 0x40)
+        return {"ip": None}
+    return {"ip": ip}
 
-    return resultado["ip"]
-
-
-def leer_ip_guardada():
-    try:
-        return open(ESTACION_CFG, "r", encoding="utf-8").read().strip()
-    except Exception:
-        return ""
-
-
-def guardar_ip(ip):
-    try:
-        os.makedirs(os.path.dirname(ESTACION_CFG), exist_ok=True)
-        with open(ESTACION_CFG, "w", encoding="utf-8") as f:
-            f.write(ip)
-    except Exception:
-        pass
-
-
-def detectar_otro_servidor(puerto):
-    """Busca otro Lab Clinico Servidor activo en la subred local"""
-    import socket
-    import concurrent.futures
-    import urllib.request
-
-    try:
-        mi_ip = socket.gethostbyname(socket.gethostname())
-    except Exception:
-        return None
-
-    def probar(ip):
-        try:
-            req = urllib.request.urlopen(f"http://{ip}:{puerto}/", timeout=0.5)
-            html = req.read(4000).decode("utf-8", "ignore")
-            if "Lab Clínico" in html or "configuracion-inicial" in html or "accounts/login" in html:
-                return ip
-        except Exception:
-            pass
-        return None
-
-    base = ".".join(mi_ip.split(".")[:3])
-    candidatos = [f"{base}.{i}" for i in range(1, 255) if f"{base}.{i}" != mi_ip]
-    with concurrent.futures.ThreadPoolExecutor(max_workers=64) as ex:
-        for resultado in ex.map(probar, candidatos):
-            if resultado:
-                return resultado
     return None
 
 
@@ -427,100 +291,19 @@ def main():
         
         # Mostrar ventana de estado en modo LAN para que el usuario sepa que está corriendo
         if args.lan:
-            import tkinter as tk
-            from tkinter import messagebox
-            
-            ventana = tk.Tk()
-            ventana.title("Lab Clínico - Servidor Activo")
-            ventana.geometry("480x280")
-            ventana.resizable(False, False)
-            ventana.configure(bg="#f8fafc")
-            ventana.attributes("-topmost", True)
-            
             try:
-                ventana.eval("tk::PlaceWindow . center")
+                import ctypes
+                msg = (
+                    f"Lab Clínico - Servidor Activo\n\n"
+                    f"Esta PC:   {url}\n"
+                    f"Otras PCs: http://{ip}:{args.puerto}\n\n"
+                    f"El servidor está corriendo en modo red local.\n"
+                    f"Cierra esta ventana para detener el servidor."
+                )
+                ctypes.windll.user32.MessageBoxW(0, msg, "Lab Clínico", 0x40)
             except Exception:
-                pass
-            
-            frame = tk.Frame(ventana, bg="#f8fafc", padx=30, pady=25)
-            frame.pack(fill="both", expand=True)
-            
-            tk.Label(
-                frame, text="Lab Clínico",
-                font=("Segoe UI", 20, "bold"),
-                bg="#f8fafc", fg="#0f172a",
-            ).pack(pady=(0, 5))
-            
-            tk.Label(
-                frame, text="Servidor activo en la red local",
-                font=("Segoe UI", 11),
-                bg="#f8fafc", fg="#059669",
-            ).pack(pady=(0, 15))
-            
-            try:
-                ip = socket.gethostbyname(socket.gethostname())
-            except Exception:
-                ip = "TU_IP"
-            
-            tk.Label(
-                frame, text=f"IP del servidor: {ip}",
-                font=("Consolas", 12, "bold"),
-                bg="#f8fafc", fg="#1e40af",
-            ).pack(pady=(0, 5))
-            
-            tk.Label(
-                frame, text=f"Puerto: {args.puerto}",
-                font=("Segoe UI", 10),
-                bg="#f8fafc", fg="#64748b",
-            ).pack(pady=(0, 20))
-            
-            tk.Label(
-                frame, text="Esta ventana debe quedar abierta.",
-                font=("Segoe UI", 9),
-                bg="#f8fafc", fg="#64748b",
-            ).pack()
+                input("Presiona Enter para detener el servidor...")
 
-            tk.Label(
-                frame, text="Las estaciones se conectan usando esta IP.",
-                font=("Segoe UI", 9),
-                bg="#f8fafc", fg="#64748b",
-            ).pack(pady=(0, 20))
-            
-            def detener():
-                ventana.destroy()
-                import os, signal
-                os.kill(os.getpid(), signal.SIGTERM)
-            
-            btn = tk.Button(
-                frame, text="Detener servidor",
-                command=detener,
-                font=("Segoe UI", 10, "bold"),
-                bg="#dc2626", fg="white",
-                activebackground="#b91c1c",
-                relief="flat",
-                padx=20, pady=8,
-                cursor="hand2",
-            )
-            btn.pack()
-            
-            # Ajustar la ventana al contenido real (respeta el escalado del sistema)
-            ventana.update_idletasks()
-            req_w = max(ventana.winfo_reqwidth() + 20, 480)
-            req_h = max(ventana.winfo_reqheight() + 20, 300)
-            ventana.geometry(f"{req_w}x{req_h}")
-            try:
-                ventana.eval("tk::PlaceWindow . center")
-            except Exception:
-                pass
-
-            ventana.protocol("WM_DELETE_WINDOW", detener)
-            ventana.mainloop()
-        else:
-            import time
-            while True:
-                time.sleep(3600)
-
-    abrir_ventana(url, mantener_vivo=True)
 
 
 if __name__ == "__main__":
