@@ -37,6 +37,22 @@ class Examen(models.Model):
             models.Index(fields=["tipo_resultado"]),
         ]
 
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        try:
+            from apps.results.models import Resultado
+
+            Resultado.objects.filter(
+                examen=self,
+                estado="borrador",
+                valor_numerico=None,
+                valor_cualitativo="",
+            ).exclude(tipo_resultado=self.tipo_resultado).update(
+                tipo_resultado=self.tipo_resultado
+            )
+        except Exception:
+            pass
+
     def __str__(self):
         return self.nombre_completo
 
