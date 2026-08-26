@@ -18,5 +18,8 @@ def forwards(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-    dependencies = [("exams", "0003_examen_tipo_resultado")]
+    dependencies = [
+        ("exams", "0003_examen_tipo_resultado"),
+        ("results", "0002_remove_resultado_resultado_resultado_observaciones_and_more"),
+    ]
     operations = [migrations.RunPython(forwards, migrations.RunPython.noop)]
