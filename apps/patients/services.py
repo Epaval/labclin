@@ -49,10 +49,12 @@ def generar_pdf_reporte(paciente, expedientes):
         if bioanalista is None and exp.bioanalista:
             bioanalista = exp.bioanalista
 
-    if bioanalista:
+    if lab.bioanalista_nombre:
+        nombre_firma = lab.bioanalista_nombre
+    elif bioanalista:
         nombre_firma = bioanalista.full_name
     else:
-        nombre_firma = lab.bioanalista_nombre
+        nombre_firma = ""
 
     registro_firma = lab.bioanalista_registro
 
@@ -65,6 +67,8 @@ def generar_pdf_reporte(paciente, expedientes):
             "logo_path": lab.logo_pdf_path,
             "nombre_firma": nombre_firma,
             "registro_firma": registro_firma,
+            "firma_path": lab.firma_pdf_path,
+            "sello_path": lab.sello_pdf_path,
             "fecha_generacion": timezone.now(),
         },
     )

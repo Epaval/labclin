@@ -10,7 +10,7 @@ class DatosLaboratorioAdmin(admin.ModelAdmin):
         ("Identificacion", {"fields": ("nombre", "rif", "lema", "logo")}),
         ("Contacto", {"fields": ("direccion", "ciudad", "telefono", "email")}),
         ("Facturacion", {"fields": ("simbolo_moneda",)}),
-        ("Firma del reporte", {"fields": ("bioanalista_nombre", "bioanalista_registro")}),
+        ("Firma del reporte", {"fields": ("bioanalista_nombre", "bioanalista_registro", "firma_imagen", "sello_imagen")}),
     )
 
     def has_add_permission(self, request):

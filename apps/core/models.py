@@ -35,6 +35,16 @@ class DatosLaboratorio(models.Model):
     bioanalista_registro = models.CharField(
         "Nro de registro del bioanalista", max_length=40, blank=True
     )
+    firma_imagen = models.ImageField(
+        "Firma del bioanalista (PNG transparente)",
+        upload_to="firmas/", null=True, blank=True,
+        help_text="Se imprime sobre la línea de firma en los PDF",
+    )
+    sello_imagen = models.ImageField(
+        "Sello del laboratorio (PNG transparente)",
+        upload_to="sellos/", null=True, blank=True,
+        help_text="Se imprime junto a la firma en los PDF",
+    )
 
     class Meta:
         verbose_name = "Datos del laboratorio"
@@ -53,6 +63,14 @@ class DatosLaboratorio(models.Model):
         if not self.logo:
             return None
         return self.logo.path
+
+    @property
+    def firma_pdf_path(self):
+        return self.firma_imagen.path if self.firma_imagen else None
+
+    @property
+    def sello_pdf_path(self):
+        return self.sello_imagen.path if self.sello_imagen else None
 
     @classmethod
     def cargar(cls):
