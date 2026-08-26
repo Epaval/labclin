@@ -99,6 +99,8 @@ class Resultado(models.Model):
             models.Index(fields=["expediente", "estado"]),
             models.Index(fields=["examen", "estado"]),
             models.Index(fields=["fecha_creacion"]),
+            models.Index(fields=["estado", "fecha_creacion"]),
+            models.Index(fields=["tipo_resultado"]),
         ]
 
     def __str__(self):

@@ -34,6 +34,7 @@ class Examen(models.Model):
         indexes = [
             models.Index(fields=["nombre_completo"]),
             models.Index(fields=["perfil"]),
+            models.Index(fields=["tipo_resultado"]),
         ]
 
     def __str__(self):

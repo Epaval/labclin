@@ -350,6 +350,17 @@ def main():
             print(f"[seed] ejecutado: {Examen.objects.count()} exámenes en BD")
         else:
             print(f"[seed_catalogo] omitido: orina ya existe ({Examen.objects.count()} exámenes)")
+    # Cachear catálogo para consultas rápidas
+    try:
+        from apps.exams.models import Examen
+        catalogo = list(Examen.objects.values("id", "nombre_completo", "perfil", "tipo_resultado", "valores_ref", "activo"))
+        cache_path = os.path.join(DATA_BASE, "catalogo_cache.json")
+        import json
+        with open(cache_path, "w", encoding="utf-8") as f:
+            json.dump(catalogo, f, ensure_ascii=False, indent=2)
+    except Exception:
+        pass
+
     except Exception as e:
         print(f"[seed] aviso: {e}")
     
