@@ -59,8 +59,6 @@ a = Analysis(
     runtime_hooks=[],
     excludes=[
         'matplotlib', 'numpy', 'pandas', 'pytest',
-        # Tkinter no se usa (ahorra ~30-40MB de Tcl/Tk)
-        'tkinter', '_tkinter', 'Tkinter',
         # Módulos stdlib no usados (seguros de excluir)
         'pydoc_data', 'doctest', 'lib2to3', 'idlelib', 'turtle',
         # Django modules no usados (los demás son necesarios en web)
