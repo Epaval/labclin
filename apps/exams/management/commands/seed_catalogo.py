@@ -207,6 +207,16 @@ CATALOGO = {
 }
 
 
+
+TIPO_POR_NOMBRE = {
+    "Color orina": "texto", "Transparencia orina": "texto", "Olor orina": "texto",
+    "Cristales en sedimento": "texto", "Células epiteliales en sedimento": "texto",
+    "Proteínas en orina": "cualitativo", "Glucosa en orina": "cualitativo",
+    "Cetonas en orina": "cualitativo", "Nitritos en orina": "cualitativo",
+    "Leucocitos (esterasa)": "cualitativo", "Sangre en orina": "cualitativo",
+    "Bacterias en sedimento": "cualitativo",
+}
+
 class Command(BaseCommand):
     help = "Carga el catalogo completo de examenes de laboratorio por perfil"
 

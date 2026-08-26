@@ -32,9 +32,13 @@ class ExamenForm(forms.ModelForm):
             "nombre_completo",
             "valores_ref",
             "perfil",
+            "tipo_resultado",
             "activo",
         ]
         widgets = {
+            "tipo_resultado": forms.Select(attrs={
+                "class": "w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 outline-none",
+            }),
             "nombre_completo": forms.TextInput(attrs={
                 "placeholder": "Ej: Hematología completa",
             }),

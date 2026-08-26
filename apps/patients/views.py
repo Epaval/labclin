@@ -179,7 +179,7 @@ class ExpedienteCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateVi
             Resultado.objects.get_or_create(
                 expediente=self.object,
                 examen=examen,
-                defaults={"estado": "borrador", "creado_por": self.request.user},
+                defaults={"tipo_resultado": examen.tipo_resultado, "estado": "borrador", "creado_por": self.request.user},
             )
         for medico in form.cleaned_data["medicos"]:
             ExpedienteMedico.objects.get_or_create(

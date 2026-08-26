@@ -19,7 +19,8 @@ class CostoExamenInline(admin.TabularInline):
 
 @admin.register(Examen)
 class ExamenAdmin(admin.ModelAdmin):
-    list_display = ("nombre_completo", "perfil", "activo")
-    list_filter = ("perfil", "activo")
+    list_display = ("nombre_completo", "perfil", "tipo_resultado", "activo")
+    list_editable = ("tipo_resultado", "activo")
+    list_filter = ("perfil", "activo", "tipo_resultado")
     search_fields = ("nombre_completo",)
     inlines = [CostoExamenInline]

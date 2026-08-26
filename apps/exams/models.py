@@ -4,7 +4,17 @@ from django.db.models.functions import Lower
 
 
 class Examen(models.Model):
+    TIPO_RESULTADO = [
+        ("numerico", "Numérico"),
+        ("cualitativo", "Cualitativo"),
+        ("texto", "Texto libre"),
+    ]
+
     nombre_completo = models.CharField(max_length=255)
+    tipo_resultado = models.CharField(
+        max_length=20, choices=TIPO_RESULTADO, default="numerico",
+        help_text="Tipo de valor que acepta este examen",
+    )
     valores_ref = models.TextField(blank=True)
     perfil = models.CharField(max_length=120, blank=True)
 
