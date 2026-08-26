@@ -6,7 +6,7 @@
   @page { size: letter; margin: 1.8cm; }
   body { font-family: Helvetica, Arial, sans-serif; font-size: 10px; color: #1e293b; }
   table { width: 100%; border-collapse: collapse; }
-  th, td { border: 1px solid #cbd5e1; padding: 5px 7px; text-align: left; vertical-align: top; }
+  th, td { border: 1px solid #cbd5e1; padding: 3px 6px; text-align: left; vertical-align: top; }
   th { background-color: #f1f5f9; font-size: 9px; text-transform: uppercase; }
   .sin-borde, .sin-borde td { border: none; padding: 0; }
   .lab-nombre { font-size: 20px; font-weight: bold; color: #0369a1; }
@@ -15,10 +15,10 @@
   .lema { font-size: 9px; color: #64748b; font-style: italic; margin-top: 3px; }
   .sub { color: #64748b; font-size: 9px; }
   .datos td { background-color: #f8fafc; }
-  .orden-titulo { font-size: 12px; font-weight: bold; color: #0f172a; margin-top: 16px; }
-  .perfil-titulo { font-size: 11px; font-weight: bold; color: #0369a1; margin: 12px 0 4px 0; text-transform: uppercase; }
+  .orden-titulo { font-size: 12px; font-weight: bold; color: #0f172a; margin-top: 10px; }
+  .perfil-titulo { font-size: 11px; font-weight: bold; color: #0369a1; margin: 8px 0 3px 0; text-transform: uppercase; }
   .pendiente { color: #b45309; font-style: italic; }
-  .firma { margin-top: 50px; }
+  .firma { margin-top: 24px; page-break-inside: avoid; }
   .firma-linea { border-top: 1px solid #1e293b; width: 260px; margin: 0 auto; padding-top: 4px; }
   .pie { margin-top: 24px; font-size: 8px; color: #94a3b8; }
 </style>
@@ -120,12 +120,17 @@
           {% endif %}
         </td>
       </tr>
+      <tr>
+        <td style="text-align:center; padding-top:12px;">
+          <span style="font-size:8px; color:#94a3b8;">Este documento es confidencial y fue generado electrónicamente por {{ lab.nombre }}. Los resultados deben ser interpretados por un profesional de la salud.</span>
+        </td>
+      </tr>
     </table>
+  {% else %}
+    <p class="pie">
+      Este documento es confidencial y fue generado electrónicamente por {{ lab.nombre }}.
+      Los resultados deben ser interpretados por un profesional de la salud.
+    </p>
   {% endif %}
-
-  <p class="pie">
-    Este documento es confidencial y fue generado electrónicamente por {{ lab.nombre }}.
-    Los resultados deben ser interpretados por un profesional de la salud.
-  </p>
 </body>
 </html>
