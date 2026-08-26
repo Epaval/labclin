@@ -114,7 +114,7 @@ class Resultado(models.Model):
             if self.unidad:
                 texto += f" {self.unidad}"
             return texto
-        elif self.tipo_resultado == "cualitativo" and self.valor_cualitativo:
+        elif self.tipo_resultado in ("cualitativo", "texto") and self.valor_cualitativo:
             return self.valor_cualitativo
         elif self.observaciones:
             return self.observaciones
@@ -125,7 +125,7 @@ class Resultado(models.Model):
         """Verifica si ya tiene un resultado cargado"""
         if self.tipo_resultado == "numerico":
             return self.valor_numerico is not None
-        elif self.tipo_resultado == "cualitativo":
+        elif self.tipo_resultado in ("cualitativo", "texto"):
             return bool(self.valor_cualitativo)
         return bool(self.observaciones)
 
