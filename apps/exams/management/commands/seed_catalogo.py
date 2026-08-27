@@ -309,6 +309,7 @@ class Command(BaseCommand):
         # Perfil paquete de heces (coprológico)
         try:
             ph, _ = Perfil.objects.get_or_create(nombre="Examen de Heces (Coprológico)")
+            Examen.objects.filter(nombre_completo="Coprocultivo").update(perfil="Heces · Microbiológico")
             ph.examenes.set(Examen.objects.filter(perfil__startswith="Heces ·"))
             self.stdout.write(f"  Perfil heces: {ph.examenes.count()} exámenes")
         except Exception as e:
