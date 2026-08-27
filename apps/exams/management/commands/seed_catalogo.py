@@ -163,7 +163,7 @@ CATALOGO = {
     "Heces": [
         ("Coproanalisis", "Sin alteraciones"),
         ("Sangre oculta en heces", "Negativo"),
-        ("Parasitos en heces", "Negativo"),
+        ("Parásitos en heces", "Negativo"),
         ("Coprocultivo", "Sin desarrollo de patogenos"),
     ],
     "Heces · Macroscópico": [
@@ -249,7 +249,8 @@ TIPO_POR_NOMBRE = {
     "Color heces": "texto", "Olor heces": "texto", "Huevos de parásitos": "texto", "Coprocultivo": "texto",
     "Consistencia heces": "cualitativo", "Forma heces": "cualitativo", "Moco en heces": "cualitativo",
     "Pus en heces": "cualitativo", "Sangre visible en heces": "cualitativo",
-    "Parásitos en heces": "cualitativo", "Grasa en heces (Sudan III)": "cualitativo",
+    "Parásitos en heces": "cualitativo", "Eritrocitos en heces": "cualitativo",
+    "Leucocitos en heces": "numerico", "Grasa en heces (Sudan III)": "cualitativo",
     "Alimentos no digeridos": "cualitativo", "Levaduras en heces": "cualitativo",
     "Sangre oculta en heces": "cualitativo", "Sustancias reductoras en heces": "cualitativo",
     "Tripsina fecal": "cualitativo", "Helicobacter pylori (antígeno en heces)": "cualitativo",
