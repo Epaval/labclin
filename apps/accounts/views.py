@@ -27,6 +27,7 @@ from .forms import (
     EmpleadoUpdateForm,
 )
 from .models import Empleado, Rol
+from django.core.cache import cache
 
 
 class DashboardView(LoginRequiredMixin, TemplateView):
@@ -34,45 +35,55 @@ class DashboardView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["total_pacientes"] = Paciente.objects.filter(activo=True).count()
-        context["total_medicos"] = Medico.objects.filter(activo=True).count()
-        context["total_examenes"] = Examen.objects.filter(activo=True).count()
-        context["total_resultados"] = Resultado.objects.count()
-        context["pacientes_del_dia"] = Paciente.objects.filter(
+
+        # Caché de estadísticas (60s): evita ~8 queries por request
+        cached = cache.get("dashboard_stats")
+        if cached:
+            context.update(cached)
+            context["modo_escritorio"] = settings.ESCRITORIO
+            return context
+
+        stats = {}
+        stats["total_pacientes"] = Paciente.objects.filter(activo=True).count()
+        stats["total_medicos"] = Medico.objects.filter(activo=True).count()
+        stats["total_examenes"] = Examen.objects.filter(activo=True).count()
+        stats["total_resultados"] = Resultado.objects.count()
+        stats["pacientes_del_dia"] = Paciente.objects.filter(
             expedientes__fecha_creacion__date=date.today(),
             activo=True,
         ).distinct().count()
-        context["modo_escritorio"] = settings.ESCRITORIO
-
         # Métricas de órdenes
-        context["ordenes_abiertas"] = Expediente.objects.filter(estado__in=["abierto", "procesando"]).count()
-        context["ordenes_cerradas_hoy"] = Expediente.objects.filter(
+        stats["ordenes_abiertas"] = Expediente.objects.filter(estado__in=["abierto", "procesando"]).count()
+        stats["ordenes_cerradas_hoy"] = Expediente.objects.filter(
             estado="cerrado",
             fecha_creacion__date=date.today()
         ).count()
 
         # Ingresos del día (facturas emitidas)
-        context["ingresos_hoy"] = Factura.objects.filter(
+        stats["ingresos_hoy"] = Factura.objects.filter(
             fecha_creacion__date=date.today(),
             estado="emitida"
         ).aggregate(total=models.Sum("total"))["total"] or 0
 
         # Ingresos del mes
         primer_dia_mes = date.today().replace(day=1)
-        context["ingresos_mes"] = Factura.objects.filter(
+        stats["ingresos_mes"] = Factura.objects.filter(
             fecha_creacion__date__gte=primer_dia_mes,
             estado="emitida"
         ).aggregate(total=models.Sum("total"))["total"] or 0
 
         # Top 5 exámenes más solicitados (últimos 30 días)
         treinta_dias = timezone.now() - timezone.timedelta(days=30)
-        context["top_examenes"] = (
+        stats["top_examenes"] = list(
             Resultado.objects.filter(fecha_creacion__gte=treinta_dias)
             .values("examen__nombre_completo")
             .annotate(total=models.Count("id"))
             .order_by("-total")[:5]
         )
 
+        cache.set("dashboard_stats", stats, 60)
+        context.update(stats)
+        context["modo_escritorio"] = settings.ESCRITORIO
         return context
 
 

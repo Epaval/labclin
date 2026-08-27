@@ -15,7 +15,8 @@ PRECIO_PERFIL = {
     "Electrolitos": 0, "Uroanalisis": 0, "Tiroides": 0,
     "Hormonas": 0, "Marcadores Tumorales": 0, "Serologia / Infecciosas": 0,
     "Vitaminas y Minerales": 0, "Marcadores Cardiacos": 0,
-    "Pancreas": 0, "Heces": 0, "Inmunologia": 0, "Otros": 0,
+    "Pancreas": 0, "Heces": 0,
+    "Heces · Macroscópico": 0, "Heces · Microscópico": 0, "Heces · Químicos": 0, "Heces · Microbiológico": 0, "Inmunologia": 0, "Otros": 0,
     "Orina · Físicos": 0, "Orina · Químicos": 0, "Orina · Microscópico": 0,
 }
 
@@ -165,6 +166,35 @@ CATALOGO = {
         ("Parasitos en heces", "Negativo"),
         ("Coprocultivo", "Sin desarrollo de patogenos"),
     ],
+    "Heces · Macroscópico": [
+        ("Color heces", "Marrón (normal). Arcilloso, negro o rojo sugiere patología."),
+        ("Consistencia heces", "Formada blanda (Bristol 3-4). Dura, líquida o pastosa anormal."),
+        ("Forma heces", "Cilíndrica. Acintada, fragmentada o caprina anormal."),
+        ("Olor heces", "Característico. Fétido o pútrido sugiere malabsorción."),
+        ("Moco en heces", "Ausente o escaso. Abundante sugiere inflamación."),
+        ("Pus en heces", "Ausente. Presente sugiere infección o enfermedad inflamatoria."),
+        ("Sangre visible en heces", "Ausente. Roja sugiere sangrado distal; negra, proximal."),
+    ],
+    "Heces · Microscópico": [
+        ("Huevos de parásitos", "Ausentes. Identificación por especie si presentes."),
+        ("Leucocitos en heces", "0 - 2 por campo. Abundantes sugieren colitis infecciosa."),
+        ("Eritrocitos en heces", "Ausentes. Presencia sugiere sangrado o colitis."),
+        ("Grasa en heces (Sudan III)", "Ausente o escasa. Abundante: esteatorrea."),
+        ("Alimentos no digeridos", "Escasos. Abundantes: maldigestión."),
+        ("Levaduras en heces", "Escasas. Abundantes sugieren sobrecrecimiento."),
+    ],
+    "Heces · Químicos": [
+        ("pH fecal", "6.0 - 7.5"),
+        ("Sustancias reductoras en heces", "Negativo. Positivo: intolerancia a carbohidratos."),
+        ("Tripsina fecal", "Positiva (actividad normal)."),
+        ("Elastasa pancreática fecal", ">200 ug/g (normal). 100-200 leve; <100 insuficiencia."),
+    ],
+    "Heces · Microbiológico": [
+        ("Helicobacter pylori (antígeno en heces)", "Negativo. Positivo: infección activa."),
+        ("Coprocultivo", "Sin desarrollo de patógenos."),
+        ("Clostridium difficile toxina A/B", "Negativo. Positivo: colitis pseudomembranosa."),
+        ("Rotavirus / Adenovirus", "Negativo."),
+    ],
     "Inmunologia": [
         ("ANA (anticuerpos antinucleares)", "<1:40"),
         ("Anti-DNA", "<10 UI/mL"),
@@ -215,6 +245,15 @@ TIPO_POR_NOMBRE = {
     "Cetonas en orina": "cualitativo", "Nitritos en orina": "cualitativo",
     "Leucocitos (esterasa)": "cualitativo", "Sangre en orina": "cualitativo",
     "Bacterias en sedimento": "cualitativo",
+    # Heces
+    "Color heces": "texto", "Olor heces": "texto", "Huevos de parásitos": "texto", "Coprocultivo": "texto",
+    "Consistencia heces": "cualitativo", "Forma heces": "cualitativo", "Moco en heces": "cualitativo",
+    "Pus en heces": "cualitativo", "Sangre visible en heces": "cualitativo",
+    "Parásitos en heces": "cualitativo", "Grasa en heces (Sudan III)": "cualitativo",
+    "Alimentos no digeridos": "cualitativo", "Levaduras en heces": "cualitativo",
+    "Sangre oculta en heces": "cualitativo", "Sustancias reductoras en heces": "cualitativo",
+    "Tripsina fecal": "cualitativo", "Helicobacter pylori (antígeno en heces)": "cualitativo",
+    "Clostridium difficile toxina A/B": "cualitativo", "Rotavirus / Adenovirus": "cualitativo",
 }
 
 class Command(BaseCommand):
@@ -246,6 +285,13 @@ class Command(BaseCommand):
                     )
 
 
+        # Aplicar tipos por nombre (idempotente)
+        upd = 0
+        for nombre, tipo in TIPO_POR_NOMBRE.items():
+            upd += Examen.objects.filter(nombre_completo=nombre).exclude(tipo_resultado=tipo).update(tipo_resultado=tipo)
+        if upd:
+            self.stdout.write(f"  Tipos actualizados: {upd} exámenes")
+
         # Perfil paquete de uroanálisis (idempotente)
         try:
             perfil_orina, _ = Perfil.objects.get_or_create(nombre="Examen de Orina (Uroanálisis)")
@@ -257,6 +303,15 @@ class Command(BaseCommand):
             self.stdout.write(f"  Perfil uroanálisis: {perfil_orina.examenes.count()} exámenes")
         except Exception as e:
             self.stdout.write(self.style.WARNING(f"  ⚠ perfil orina: {e}"))
+
+
+        # Perfil paquete de heces (coprológico)
+        try:
+            ph, _ = Perfil.objects.get_or_create(nombre="Examen de Heces (Coprológico)")
+            ph.examenes.set(Examen.objects.filter(perfil__startswith="Heces ·"))
+            self.stdout.write(f"  Perfil heces: {ph.examenes.count()} exámenes")
+        except Exception as e:
+            self.stdout.write(self.style.WARNING(f"  ⚠ perfil heces: {e}"))
 
         total = Examen.objects.count()
         self.stdout.write(self.style.SUCCESS(

@@ -351,6 +351,17 @@ def main():
         else:
             print(f"[seed_catalogo] omitido: orina ya existe ({Examen.objects.count()} exámenes)")
 
+        # Caché JSON del catálogo para consultas rápidas
+        try:
+            import json
+            catalogo = list(Examen.objects.values(
+                "id", "nombre_completo", "perfil", "tipo_resultado", "valores_ref", "activo"))
+            with open(os.path.join(DATA_BASE, "catalogo_cache.json"), "w", encoding="utf-8") as f:
+                json.dump(catalogo, f, ensure_ascii=False, indent=2)
+            print(f"[caché] catalogo_cache.json generado ({len(catalogo)} exámenes)")
+        except Exception as ce:
+            print(f"[caché] aviso: {ce}")
+
     except Exception as e:
         print(f"[seed] aviso: {e}")
     

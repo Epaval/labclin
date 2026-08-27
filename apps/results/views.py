@@ -100,22 +100,19 @@ class CargarOrdenResultadosView(LoginRequiredMixin, PermissionRequiredMixin, Vie
                     continue
 
                 try:
-                    if r.tipo_resultado == "numerico":
+                    # SIEMPRE el tipo del examen (el del borrador puede estar desactualizado)
+                    tipo = r.examen.tipo_resultado
+                    if tipo == "numerico":
                         r.valor_numerico = Decimal(valor_str.replace(",", "."))
                         r.unidad = unidad
-                        r.estado = "cargado"
-                        r.save()
-                        guardados += 1
-                    elif r.tipo_resultado == "cualitativo":
+                        r.valor_cualitativo = ""
+                    else:  # cualitativo o texto
                         r.valor_cualitativo = valor_str
-                        r.estado = "cargado"
-                        r.save()
-                        guardados += 1
-                    elif r.tipo_resultado == "texto":
-                        r.valor_cualitativo = valor_str  # Reutilizamos campo de texto
-                        r.estado = "cargado"
-                        r.save()
-                        guardados += 1
+                        r.valor_numerico = None
+                    r.tipo_resultado = tipo
+                    r.estado = "cargado"
+                    r.save()
+                    guardados += 1
                 except (InvalidOperation, ValueError) as e:
                     errores.append(f"{r.examen.nombre_completo}: valor inválido")
 
