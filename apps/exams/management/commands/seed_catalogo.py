@@ -247,7 +247,7 @@ TIPO_POR_NOMBRE = {
     "Bacterias en sedimento": "cualitativo",
     # Heces
     "Color heces": "texto", "Olor heces": "texto", "Huevos de parásitos": "texto", "Coprocultivo": "texto",
-    "Consistencia heces": "cualitativo", "Forma heces": "cualitativo", "Moco en heces": "cualitativo",
+    "Consistencia heces": "texto", "Forma heces": "texto", "Moco en heces": "cualitativo",
     "Pus en heces": "cualitativo", "Sangre visible en heces": "cualitativo",
     "Parásitos en heces": "cualitativo", "Eritrocitos en heces": "cualitativo",
     "Leucocitos en heces": "numerico", "Grasa en heces (Sudan III)": "cualitativo",
