@@ -1,3 +1,4 @@
+import os
 """
 Sistema de licencias con tipos:
   - prueba:   N dias desde la primera ejecucion
@@ -19,7 +20,8 @@ from datetime import datetime, timedelta
 # SECRETO DEL VENDEDOR (cambialo y no lo compartas)
 SECRET = b"AZMA1972JCPD1970#2005$1991"
 
-PRUEBA_DIAS = 7
+PRUEBA_DIAS = int(os.environ.get("LABCLIN_TRIAL_DIAS", "7"))
+MODO_DEV = os.environ.get("LABCLIN_DEV", "") == "1"
 ANUAL_DIAS = 365
 
 TIPOS_VALIDOS = ["anual", "perpetua"]
@@ -232,3 +234,23 @@ def tipo_licencia_actual() -> str:
     if licencia:
         return licencia[0]
     return "prueba"
+
+
+def info_licencia() -> dict:
+    """Resumen completo de la licencia para el panel de administracion."""
+    lic = leer_licencia()
+    tipo = tipo_licencia_actual()
+    estado = estado_licencia()
+    clave = None
+    venc = None
+    if lic:
+        clave = lic[1]
+        try:
+            venc = fecha_vencimiento(*lic)
+        except Exception:
+            venc = None
+    return {
+        "tipo": tipo, "estado": estado, "dias": dias_restantes(),
+        "vencimiento": venc, "huella": huella_maquina(), "clave": clave,
+        "dev": MODO_DEV, "prueba_dias": PRUEBA_DIAS,
+    }

@@ -94,6 +94,9 @@
       </div>
     </div>
 
+    {% if dev %}
+    <div style="background:#fef3c7;border:2px dashed #d97706;border-radius:10px;padding:10px;margin:14px 0;font-size:.9rem;color:#92400e">🧪 <strong>Modo dev activo</strong> — prueba de {{ prueba_dias }} días. Ajusta con <code>LABCLIN_TRIAL_DIAS=1</code> y reinicia.</div>
+    {% endif %}
     <div class="huella-box">
       <small>Codigo de esta maquina (enviaselo a tu proveedor)</small>
       <div class="huella">{{ huella }}</div>

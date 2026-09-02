@@ -10,6 +10,8 @@ from .licencias import (
     fecha_vencimiento,
     guardar_licencia,
     huella_maquina,
+    MODO_DEV,
+    PRUEBA_DIAS,
     leer_licencia,
     tipo_licencia_actual,
 )
@@ -28,6 +30,8 @@ class ActivacionView(View):
             "dias": dias_restantes(),
             "tipo": tipo_licencia_actual(),
             "vencimiento": vencimiento,
+            "dev": MODO_DEV,
+            "prueba_dias": PRUEBA_DIAS,
         })
 
     def post(self, request):

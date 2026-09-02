@@ -242,3 +242,14 @@ class EstadisticasView(SoloSuperUser, TemplateView):
             "chart_ing_data": json.dumps([float(m["total"] or 0) for m in ingresos]),
         })
         return ctx
+
+
+class LicenciaView(SoloSuperUser, TemplateView):
+    """Panel de licencia: tipo, vencimiento, dias, huella y modo dev."""
+    template_name = "core/licencia_panel.html"
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        from apps.core.licencias import info_licencia
+        ctx["lic"] = info_licencia()
+        return ctx
