@@ -249,6 +249,15 @@ def info_licencia() -> dict:
             venc = fecha_vencimiento(*lic)
         except Exception:
             venc = None
+    else:
+        from django.conf import settings
+        pf = settings.DATA_DIR / "primera_ejecucion"
+        if pf.exists():
+            try:
+                inicio = datetime.fromisoformat(pf.read_text().strip())
+                venc = inicio + timedelta(days=PRUEBA_DIAS)
+            except Exception:
+                venc = None
     return {
         "tipo": tipo, "estado": estado, "dias": dias_restantes(),
         "vencimiento": venc, "huella": huella_maquina(), "clave": clave,
