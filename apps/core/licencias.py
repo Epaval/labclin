@@ -196,7 +196,7 @@ def estado_licencia() -> str:
         prueba_file.write_text(datetime.now().isoformat())
 
     inicio = datetime.fromisoformat(prueba_file.read_text().strip())
-    if (datetime.now() - inicio).days <= PRUEBA_DIAS:
+    if (datetime.now().date() - inicio.date()).days <= PRUEBA_DIAS:
         return "prueba"
     return "vencida"
 
@@ -219,7 +219,7 @@ def dias_restantes() -> int:
     if not prueba_file.exists():
         return PRUEBA_DIAS
     inicio = datetime.fromisoformat(prueba_file.read_text().strip())
-    return max(PRUEBA_DIAS - (datetime.now() - inicio).days, 0)
+    return max(PRUEBA_DIAS - (datetime.now().date() - inicio.date()).days, 0)
 
 
 def tipo_licencia_actual() -> str:
