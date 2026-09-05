@@ -18,7 +18,7 @@ class PacienteForm(forms.ModelForm):
             "apellidos": forms.TextInput(attrs={"placeholder": "Ej: González"}),
             "ci": forms.TextInput(attrs={"placeholder": "Ej: V12345678"}),
             "direccion": forms.Textarea(attrs={"rows": 2, "placeholder": "Dirección completa"}),
-            "telefono": forms.TextInput(attrs={"placeholder": "+584141234567", "required": True}),
+            "telefono": forms.TextInput(attrs={"placeholder": "+584141234567"}),
             "representante": forms.HiddenInput(),
             "email": forms.EmailInput(attrs={"placeholder": "email@ejemplo.com"}),
             "fecha_nac": forms.DateInput(attrs={"type": "date"}),
@@ -38,8 +38,11 @@ class PacienteForm(forms.ModelForm):
             if edad < 18:
                 if not rep:
                     self.add_error("representante", "Obligatorio para menores de edad.")
-                elif telefono and rep.telefono and telefono.strip() == rep.telefono.strip():
+                else:
+                    # Menor: siempre usa telefono y direccion del representante
                     cleaned["telefono"] = None
+                    if rep and not cleaned.get("direccion"):
+                        cleaned["direccion"] = rep.direccion
             if edad >= 18 and not telefono:
                 self.add_error("telefono", "El telefono es obligatorio.")
         return cleaned

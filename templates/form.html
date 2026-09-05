@@ -246,6 +246,8 @@ document.addEventListener('DOMContentLoaded', function() {
     representanteInput.value = id;
     const tel = document.getElementById('id_telefono');
     if (tel) tel.value = '';
+    const dir = document.getElementById('id_direccion');
+    if (dir) dir.value = '';
     let info = document.getElementById('rep-info');
     if (!info) {
       info = document.createElement('p');
