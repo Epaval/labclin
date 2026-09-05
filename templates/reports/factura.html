@@ -68,7 +68,7 @@
   <table>
     <tr class="datos">
       <td><strong>Paciente:</strong> {{ paciente.full_name }}</td>
-      <td><strong>CI:</strong> {{ paciente.ci|default:"-" }}</td>
+      <td><strong>CI:</strong> {{ paciente.ci_efectivo|default:"-" }}{% if paciente.es_menor and paciente.representante %}<br>Representante: {{ paciente.representante.full_name }} · CI: {{ paciente.representante.ci|default:"-" }} · Tel: {{ paciente.representante.telefono|default:"-" }}{% endif %}</td>
     </tr>
     <tr class="datos">
       <td><strong>Orden:</strong> #{{ factura.expediente.pk }}</td>
@@ -90,8 +90,8 @@
         <td>{{ d.examen.nombre_completo }}</td>
         <td>{{ d.examen.perfil|default:"General" }}</td>
         <td class="centro">{{ d.cantidad }}</td>
-        <td class="derecha">{{ lab.simbolo_moneda }} {{ d.precio_unitario|floatformat:2 }}</td>
-        <td class="derecha">{{ lab.simbolo_moneda }} {{ d.subtotal|floatformat:2 }}</td>
+        <td class="derecha">Bs {{ d.precio_bs|floatformat:2 }} <span class="sub">($ {{ d.precio_unitario|floatformat:2 }})</span></td>
+        <td class="derecha">Bs {{ d.subtotal_bs|floatformat:2 }}</td>
       </tr>
     {% endfor %}
   </table>
@@ -104,17 +104,17 @@
         <table style="width:100%;">
           <tr class="totales">
             <td class="derecha"><strong>Subtotal:</strong></td>
-            <td class="derecha">{{ lab.simbolo_moneda }} {{ factura.subtotal|floatformat:2 }}</td>
+            <td class="derecha">Bs {{ subtotal_bs|floatformat:2 }}</td>
           </tr>
           {% if factura.descuento %}
             <tr class="totales">
               <td class="derecha"><strong>Descuento:</strong></td>
-              <td class="derecha">- {{ lab.simbolo_moneda }} {{ factura.descuento|floatformat:2 }}</td>
+              <td class="derecha">- Bs {{ descuento_bs|floatformat:2 }}</td>
             </tr>
           {% endif %}
           <tr class="total-final">
             <td class="derecha">TOTAL:</td>
-            <td class="derecha">{{ lab.simbolo_moneda }} {{ factura.total|floatformat:2 }}</td>
+            <td class="derecha">Bs {{ total_bs|floatformat:2 }}<br><span class="sub">($ {{ factura.total|floatformat:2 }} · Tasa: {{ tasa|floatformat:2 }} Bs/$)</span></td>
           </tr>
         </table>
       </td>

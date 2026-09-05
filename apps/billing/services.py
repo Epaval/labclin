@@ -71,7 +71,10 @@ def generar_factura(expediente, usuario, descuento=Decimal("0")):
 
         factura.subtotal = subtotal
         factura.total = max(subtotal - descuento, Decimal("0"))
-        factura.save(update_fields=["subtotal", "total"])
+        from apps.core.models import TasaCambio
+        _t = TasaCambio.actual()
+        factura.tasa = _t.valor if _t else Decimal("0")
+        factura.save(update_fields=["subtotal", "total", "tasa"])
 
         return factura
 
@@ -91,12 +94,28 @@ def generar_pdf_factura(factura):
     """Genera el PDF de la factura con el encabezado del laboratorio"""
     lab = DatosLaboratorio.cargar()
 
+    from apps.core.models import TasaCambio
+
+    _t = TasaCambio.actual()
+    tasa = factura.tasa or (_t.valor if _t else Decimal("0"))
+    detalles = []
+    for d in factura.detalles.select_related("examen").all():
+        detalles.append({
+            "examen": d.examen, "cantidad": d.cantidad,
+            "precio_unitario": d.precio_unitario, "subtotal": d.subtotal,
+            "precio_bs": d.precio_unitario * tasa, "subtotal_bs": d.subtotal * tasa,
+        })
+
     html = render_to_string(
         "reports/factura.html",
         {
+            "tasa": tasa,
             "factura": factura,
             "paciente": factura.expediente.paciente,
-            "detalles": factura.detalles.select_related("examen").all(),
+            "detalles": detalles,
+            "subtotal_bs": factura.subtotal * tasa,
+            "descuento_bs": factura.descuento * tasa,
+            "total_bs": factura.total * tasa,
             "lab": lab,
             "logo_path": lab.logo_pdf_path,
             "fecha_generacion": timezone.now(),

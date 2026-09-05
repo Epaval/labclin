@@ -1,3 +1,4 @@
+from datetime import date
 import os
 
 from django.core.exceptions import ValidationError
@@ -78,3 +79,21 @@ class DatosLaboratorio(models.Model):
         if not obj:
             obj = cls.objects.create()
         return obj
+
+
+class TasaCambio(models.Model):
+    """Tasa de cambio del día (Bs por $)."""
+    valor = models.DecimalField("Tasa (Bs por $)", max_digits=14, decimal_places=2)
+    fecha = models.DateField(default=date.today)
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-fecha", "-id"]
+        verbose_name = "Tasa de cambio"
+
+    def __str__(self):
+        return f"{self.valor} Bs/$ ({self.fecha})"
+
+    @classmethod
+    def actual(cls):
+        return cls.objects.order_by("-fecha", "-id").first()

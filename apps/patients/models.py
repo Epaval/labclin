@@ -29,6 +29,10 @@ class Paciente(models.Model):
 
     sexo = models.CharField(max_length=1, choices=SEXO_CHOICES)
     fecha_nac = models.DateField(verbose_name="Fecha de nacimiento")
+    representante = models.ForeignKey(
+        "self", on_delete=models.SET_NULL, null=True, blank=True,
+        related_name="representados", verbose_name="Representante legal",
+    )
 
     activo = models.BooleanField(default=True)
 
@@ -86,12 +90,35 @@ class Paciente(models.Model):
 
         return anos
 
+    @property
+    def es_menor(self):
+        return self.edad is not None and self.edad < 18
+
+    def ci_efectivo(self):
+        """CI propia o la del representante si es menor sin CI."""
+        if self.ci:
+            return self.ci
+        if self.es_menor and self.representante:
+            return self.representante.ci
+        return self.ci
+
+    def telefono_efectivo(self):
+        """Para menores siempre el telefono del representante."""
+        if self.es_menor and self.representante:
+            return self.representante.telefono or self.telefono
+        return self.telefono
+
     def clean(self):
         super().clean()
-        if self.fecha_nac and self.fecha_nac > timezone.localdate():
-            raise ValidationError({
-                "fecha_nac": "La fecha de nacimiento no puede ser futura"
-            })
+        if self.fecha_nac and 9 <= self.edad < 18 and not self.ci:
+            raise ValidationError("Los pacientes entre 9 y 17 años deben tener CI.")
+        if self.fecha_nac and self.es_menor and not self.representante_id:
+            raise ValidationError("Los menores de 18 años deben tener un representante legal.")
+        if self.representante_id:
+            if self.representante_id == self.pk:
+                raise ValidationError("Un paciente no puede ser su propio representante.")
+            if self.representante.es_menor:
+                raise ValidationError("El representante debe ser mayor de edad.")
 
     def save(self, *args, **kwargs):
         self.email = self.email.lower() if self.email else None

@@ -1,5 +1,6 @@
 from apps.core.views import BackupView, BusquedaGlobalView
 from apps.core.views_activacion import ActivacionView
+from apps.core.views_tasa import TasaCambioView
 from django.contrib import admin
 from django.urls import include, path
 
@@ -18,6 +19,7 @@ urlpatterns = [
     path("configuracion-inicial/", ConfiguracionInicialView.as_view(), name="configuracion_inicial"),
     path("respaldo/", BackupView.as_view(), name="backup"),
     path("activacion/", ActivacionView.as_view(), name="activacion"),
+    path("tasa/", TasaCambioView.as_view(), name="tasa_cambio"),
     path("accounts/", include("apps.accounts.urls")),
     path("pacientes/", include("apps.patients.urls")),
     path("medicos/", include("apps.doctors.urls")),

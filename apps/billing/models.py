@@ -37,6 +37,7 @@ class Factura(models.Model):
     metodo_pago = models.CharField(max_length=20, choices=METODO_PAGO, blank=True)
 
     subtotal = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0"))
+    tasa = models.DecimalField("Tasa al emitir (Bs/$)", max_digits=14, decimal_places=2, default=0)
     descuento = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0"))
     total = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0"))
 

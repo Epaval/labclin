@@ -37,3 +37,22 @@ class ConfiguracionInicialMiddleware:
                 return redirect("configuracion_inicial")
 
         return self.get_response(request)
+
+
+class TasaMiddleware:
+    """Al entrar el admin, si la tasa no es de hoy, lo primero es registrarla."""
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        user = getattr(request, "user", None)
+        if user is not None and user.is_authenticated and (user.is_superuser or user.is_staff):
+            from datetime import date as hoy
+            from .models import TasaCambio
+
+            rutas_libres = ("/tasa", "/static", "/favicon", "/logout", "/accounts", "/activacion", "/admin")
+            t = TasaCambio.actual()
+            if (t is None or t.fecha != hoy.today()) and not request.path.startswith(rutas_libres):
+                return redirect("tasa_cambio")
+        return self.get_response(request)

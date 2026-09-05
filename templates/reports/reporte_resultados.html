@@ -62,7 +62,7 @@
   <table>
     <tr class="datos">
       <td><strong>Paciente:</strong> {{ paciente.full_name }}</td>
-      <td><strong>CI:</strong> {{ paciente.ci|default:"-" }}</td>
+      <td><strong>CI:</strong> {{ paciente.ci_efectivo|default:"-" }}{% if paciente.es_menor and paciente.representante %}<br>Representante: {{ paciente.representante.full_name }} · CI: {{ paciente.representante.ci|default:"-" }} · Tel: {{ paciente.representante.telefono|default:"-" }}{% endif %}</td>
     </tr>
     <tr class="datos">
       <td><strong>Edad:</strong> {{ paciente.edad }} años · {{ paciente.get_sexo_display }}</td>

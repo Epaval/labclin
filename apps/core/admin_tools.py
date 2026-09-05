@@ -100,16 +100,22 @@ class FacturaExportarExcelView(SoloSuperUser, TemplateView):
         fill = PatternFill("solid", fgColor="1E65C0")
         font = Font(bold=True, color="FFFFFF")
 
-        ws.append(["N Control", "N Factura", "Fecha", "Paciente", "Estado", "Motivo anulación", "Detalle motivo", "Metodo de pago", "Subtotal", "Descuento", "Total"])
+        ws.append(["N Control", "N Factura", "Fecha", "Paciente", "Estado", "Motivo anulación", "Detalle motivo", "Metodo de pago", "Subtotal", "Descuento", "Total", "Tasa", "Total Bs"])
         for c in ws[1]:
             c.fill = fill
             c.font = font
             c.alignment = Alignment(horizontal="center")
 
+        from apps.core.models import TasaCambio
+        _t = TasaCambio.actual()
+        tasa_hoy = _t.valor if _t else Decimal("0")
         total_general = Decimal("0")
+        total_general_bs = Decimal("0")
         for f in qs:
+            tasa_f = f.tasa or tasa_hoy
             if f.estado != "anulada":
                 total_general += f.total
+                total_general_bs += f.total * tasa_f
             ws.append([
                 f.numero_control,
                 f.numero,
@@ -122,14 +128,17 @@ class FacturaExportarExcelView(SoloSuperUser, TemplateView):
                 float(f.subtotal),
                 float(f.descuento),
                 float(f.total),
+                float(tasa_f),
+                float(f.total * tasa_f),
             ])
 
         ws.append([])
-        ws.append(["", "", "", "", "", "", "", "", "", "TOTAL:", float(total_general)])
-        ws.cell(row=ws.max_row, column=10).font = Font(bold=True)
+        ws.append(["", "", "", "", "", "", "", "", "", "", "TOTAL:", float(total_general), float(total_general_bs)])
         ws.cell(row=ws.max_row, column=11).font = Font(bold=True)
+        ws.cell(row=ws.max_row, column=12).font = Font(bold=True)
+        ws.cell(row=ws.max_row, column=13).font = Font(bold=True)
 
-        for i, ancho in enumerate([12, 12, 12, 40, 10, 18, 30, 18, 12, 12, 12], start=1):
+        for i, ancho in enumerate([12, 12, 12, 40, 10, 18, 30, 18, 12, 12, 12, 12, 14], start=1):
             ws.column_dimensions[chr(64 + i)].width = ancho
 
         wd = wb.create_sheet("Detalles")

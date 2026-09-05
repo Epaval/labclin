@@ -22,7 +22,8 @@
       {% for p in pacientes %}
       <a href="{% url 'patients:historial' p.pk %}" class="block px-6 py-4 hover:bg-slate-50 transition-colors">
         <p class="text-sm font-semibold text-slate-800">{{ p.full_name }}</p>
-        <p class="text-xs text-slate-500">CI: {{ p.ci|default:"-" }}</p>
+        <p class="text-xs text-slate-500">CI: {{ p.ci_efectivo|default:"-" }} · Tel: {{ p.telefono_efectivo|default:"-" }}</p>
+        {% if p.es_menor and p.representante %}<p class="text-xs text-sky-400">Rep: {{ p.representante.full_name }} · CI {{ p.representante.ci|default:"-" }}</p>{% endif %}
       </a>
       {% endfor %}
     </div>

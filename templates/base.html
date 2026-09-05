@@ -188,6 +188,10 @@
             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>
             <span class="text-sm font-medium">Ajuste de precios</span>
           </a>
+          <a href="{% url 'tasa_cambio' %}" class="sidebar-link flex items-center gap-3">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>
+            <span class="text-sm font-medium">💱 Tasa: {% if tasa_actual %}{{ tasa_actual.valor }}{% else %}—{% endif %}</span>
+          </a>
         </div>
       </div>
       {% endif %}

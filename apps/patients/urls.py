@@ -11,11 +11,15 @@ from .views import (
     PacienteListView,
     PacienteReportePDFView,
     PacienteUpdateView,
+    buscar_representante,
+    crear_representante_rapido,
 )
 
 app_name = "patients"
 
 urlpatterns = [
+    path('buscar-representante/', buscar_representante, name='buscar_representante'),
+    path('representante-rapido/', crear_representante_rapido, name='representante_rapido'),
     path("api/buscar-pacientes/", BuscarPacientesView.as_view(), name="api_buscar_pacientes"),
     path("", PacienteListView.as_view(), name="list"),
     path("nuevo/", PacienteCreateView.as_view(), name="create"),

@@ -37,6 +37,7 @@ class PacienteListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
                     | Q(ci__unaccent__icontains=term)
                     | Q(telefono__unaccent__icontains=term)
                     | Q(email__unaccent__icontains=term)
+                    | Q(representante__ci__unaccent__icontains=term)
                 )
         return qs
 
@@ -52,7 +53,7 @@ class PacienteCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView
     permission_required = "patients.crear_paciente"
     template_name = "form.html"
     success_url = reverse_lazy("patients:list")
-    extra_context = {"title": "Nuevo paciente"}
+    extra_context = {"title": "Nuevo paciente", "es_paciente": True}
 
 
 class PacienteUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
@@ -61,7 +62,7 @@ class PacienteUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView
     permission_required = "patients.change_paciente"
     template_name = "form.html"
     success_url = reverse_lazy("patients:list")
-    extra_context = {"title": "Editar paciente"}
+    extra_context = {"title": "Editar paciente", "es_paciente": True}
 
 
 # ================= HISTORIAL Y REPORTES =================
@@ -248,3 +249,50 @@ class EliminarResultadoView(LoginRequiredMixin, PermissionRequiredMixin, View):
         resultado.delete()
         messages.success(request, f"Examen '{nombre_examen}' eliminado de la orden.")
         return redirect("patients:orden_detail", pk=pk)
+
+
+# ================= REPRESENTANTE (AJAX) =================
+
+from datetime import date as _date
+from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+
+
+def _edad(fnac):
+    hoy = _date.today()
+    return hoy.year - fnac.year - ((hoy.month, hoy.day) < (fnac.month, fnac.day))
+
+
+@login_required
+def buscar_representante(request):
+    """Busca adultos por nombre, CI o telefono para el modal de representante."""
+    q = request.GET.get("q", "").strip()
+    if len(q) < 2:
+        return JsonResponse({"results": []})
+    hoy = _date.today()
+    try:
+        limite = hoy.replace(year=hoy.year - 18)
+    except ValueError:
+        limite = hoy
+    qs = Paciente.objects.filter(activo=True, fecha_nac__lte=limite).filter(
+        Q(nombres__unaccent__icontains=q)
+        | Q(apellidos__unaccent__icontains=q)
+        | Q(ci__unaccent__icontains=q)
+        | Q(telefono__unaccent__icontains=q)
+    )[:8]
+    return JsonResponse({"results": [
+        {"id": p.pk, "nombre": p.full_name, "ci": p.ci or "-", "telefono": p.telefono or "-"}
+        for p in qs
+    ]})
+
+
+@login_required
+@require_POST
+def crear_representante_rapido(request):
+    """Crea un adulto sin salir del formulario del menor."""
+    form = PacienteForm(request.POST)
+    if form.is_valid():
+        p = form.save()
+        return JsonResponse({"ok": True, "id": p.pk, "nombre": p.full_name})
+    return JsonResponse({"ok": False, "errors": form.errors}, status=400)

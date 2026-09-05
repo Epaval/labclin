@@ -11,17 +11,38 @@ class PacienteForm(forms.ModelForm):
         model = Paciente
         fields = [
             "nombres", "apellidos", "ci", "direccion",
-            "telefono", "email", "sexo", "fecha_nac",
+            "telefono", "email", "sexo", "fecha_nac", "representante",
         ]
         widgets = {
             "nombres": forms.TextInput(attrs={"placeholder": "Ej: María"}),
             "apellidos": forms.TextInput(attrs={"placeholder": "Ej: González"}),
             "ci": forms.TextInput(attrs={"placeholder": "Ej: V12345678"}),
             "direccion": forms.Textarea(attrs={"rows": 2, "placeholder": "Dirección completa"}),
-            "telefono": forms.TextInput(attrs={"placeholder": "+584141234567"}),
+            "telefono": forms.TextInput(attrs={"placeholder": "+584141234567", "required": True}),
+            "representante": forms.HiddenInput(),
             "email": forms.EmailInput(attrs={"placeholder": "email@ejemplo.com"}),
             "fecha_nac": forms.DateInput(attrs={"type": "date"}),
         }
+
+    def clean(self):
+        cleaned = super().clean()
+        fnac = cleaned.get("fecha_nac")
+        rep = cleaned.get("representante")
+        telefono = cleaned.get("telefono")
+        if fnac:
+            from datetime import date
+            hoy = date.today()
+            edad = hoy.year - fnac.year - ((hoy.month, hoy.day) < (fnac.month, fnac.day))
+            if 9 <= edad < 18 and not cleaned.get("ci"):
+                self.add_error("ci", "Obligatorio entre 9 y 17 años.")
+            if edad < 18:
+                if not rep:
+                    self.add_error("representante", "Obligatorio para menores de edad.")
+                elif telefono and rep.telefono and telefono.strip() == rep.telefono.strip():
+                    cleaned["telefono"] = None
+            if edad >= 18 and not telefono:
+                self.add_error("telefono", "El telefono es obligatorio.")
+        return cleaned
 
     def clean_fecha_nac(self):
         from django.utils import timezone
@@ -33,6 +54,13 @@ class PacienteForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields["telefono"].required = False
+        self.fields["email"].required = False
+        from datetime import date
+        hoy = date.today()
+        adultos = [p.pk for p in Paciente.objects.all()
+                   if p.fecha_nac and (hoy.year - p.fecha_nac.year - ((hoy.month, hoy.day) < (p.fecha_nac.month, p.fecha_nac.day))) >= 18]
+        self.fields["representante"].queryset = Paciente.objects.filter(pk__in=adultos)
         # En edición, la fecha de nacimiento es inmutable (solo lectura)
         if self.instance and self.instance.pk:
             self.fields["fecha_nac"].widget = forms.DateInput(

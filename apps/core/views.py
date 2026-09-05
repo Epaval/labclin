@@ -58,7 +58,9 @@ class BusquedaGlobalView(LoginRequiredMixin, TemplateView):
 
             ctx["pacientes"] = Paciente.objects.filter(
                 Q(nombres__icontains=q) | Q(apellidos__icontains=q) | Q(ci__icontains=q)
-            ).filter(activo=True)[:10]
+                | Q(representante__ci__icontains=q) | Q(telefono__icontains=q)
+                | Q(representante__telefono__icontains=q)
+            ).filter(activo=True).select_related("representante")[:10]
 
             ctx["ordenes"] = Expediente.objects.filter(
                 Q(paciente__nombres__icontains=q) | Q(paciente__apellidos__icontains=q) | Q(paciente__ci__icontains=q)
