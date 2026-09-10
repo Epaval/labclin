@@ -107,6 +107,7 @@ TEMPLATES = [
             "context_processors": [
                 "django.template.context_processors.debug",
                 "django.template.context_processors.request",
+                "apps.core.context_processors.tunnel_context",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "apps.core.context_processors.tasa_actual",
@@ -295,3 +296,6 @@ if ESCRITORIO:
             "propagate": False,
         },
     }
+
+# URL publica del tunel (usada por el monitor)
+TUNNEL_URL = env.str("TUNNEL_URL", default="")

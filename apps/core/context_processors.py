@@ -8,3 +8,11 @@ def tasa_actual(request):
         t = TasaCambio.actual()
         cache.set("tasa_actual_cp", t, 60)
     return {"tasa_actual": t}
+
+
+def tunnel_context(request):
+    try:
+        from apps.core.tunnel import tunnel_status
+        return {"tunnel": tunnel_status()}
+    except Exception:
+        return {}

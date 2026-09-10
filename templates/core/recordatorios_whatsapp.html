@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% load whatsapp_tags %}
+{% block title %}Notificaciones WhatsApp{% endblock %}
+{% block page_title %}📲 Notificaciones por WhatsApp{% endblock %}
+{% block content %}
+<div class="max-w-5xl mx-auto p-6">
+  <p class="opacity-70 text-sm mb-4">Resultados del {{ fecha|date:"d/m/Y" }} aptos para notificar al paciente.</p>
+  <form method="get" class="mb-4 flex gap-2 items-center">
+    <input type="date" name="fecha" value="{{ fecha|date:'Y-m-d' }}" class="bg-slate-800 border border-slate-600 rounded px-3 py-1.5 text-sm">
+    <button class="bg-sky-600 hover:bg-sky-700 text-white px-3 py-1.5 rounded text-sm font-bold">Ver ese dia</button>
+    <a href="{% url 'config_whatsapp' %}" class="underline text-sm ml-4">⚙️ Editar plantilla</a>
+  </form>
+  <table class="w-full text-sm">
+    <tr class="opacity-70 text-left"><th class="p-2">Fecha</th><th class="p-2">Paciente</th><th class="p-2">Telefono</th><th class="p-2">Resultado</th><th class="p-2 text-center">Notificar</th></tr>
+    {% for r in resultados %}
+    <tr class="border-t border-slate-700">
+      <td class="p-2">{{ r.fecha|date:"H:i" }}</td>
+      <td class="p-2">{{ r.expediente.paciente.nombres }} {{ r.expediente.paciente.apellidos }}</td>
+      <td class="p-2">{{ r.expediente.paciente.telefono|default:"—" }}</td>
+      <td class="p-2">{{ r.tipo_examen|default:r.motivo|default:"Resultado" }}</td>
+      <td class="p-2 text-center">{% wa_link r %}</td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="5" class="p-6 text-center opacity-60">No hay resultados publicados para este dia.</td></tr>
+    {% endfor %}
+  </table>
+</div>
+{% endblock %}

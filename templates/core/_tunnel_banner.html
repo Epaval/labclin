@@ -1,0 +1,19 @@
+{% if tunnel %}
+{% if tunnel.estado == "activo" %}
+<div class="mb-4 bg-green-900/30 border border-green-600 rounded-lg p-3 text-sm flex items-center gap-2">
+  <span>🟢</span><b>En línea</b>
+  <span class="opacity-80">— {{ tunnel.url }}</span>
+</div>
+{% elif tunnel.estado == "desactivado" %}
+<div class="mb-4 bg-slate-800/40 border border-slate-600 rounded-lg p-3 text-sm opacity-70">
+  Acceso remoto no configurado.
+</div>
+{% else %}
+<div class="mb-4 bg-red-900/30 border border-red-600 rounded-lg p-3 text-sm">
+  <span>🔴</span> <b>Sin conexión con internet</b>
+  <span class="opacity-80">— {{ tunnel.url }} no responde:
+  {% if tunnel.estado == "proceso_caido" %}el proceso cloudflared está detenido.
+  {% else %}cloudflared corre pero no hay respuesta desde internet.{% endif %}</span>
+</div>
+{% endif %}
+{% endif %}
