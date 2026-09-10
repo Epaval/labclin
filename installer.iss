@@ -11,7 +11,7 @@ OutputDir=instalador
 OutputBaseFilename=LabClinico-Setup-{#MyAppVersion}
 Compression=lzma2/ultra64
 SolidCompression=yes
-PrivilegesRequired=lowest
+PrivilegesRequired=admin
 WizardStyle=modern
 
 [Languages]
