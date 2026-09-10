@@ -298,4 +298,4 @@ if ESCRITORIO:
     }
 
 # URL publica del tunel (usada por el monitor)
-TUNNEL_URL = env.str("TUNNEL_URL", default="")
+TUNNEL_URL = env.str("DJANGO_TUNNEL_URL", default=env.str("TUNNEL_URL", default=""))
