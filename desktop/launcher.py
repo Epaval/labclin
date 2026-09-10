@@ -286,7 +286,6 @@ def main():
     parser.add_argument("--lan", action="store_true")
     parser.add_argument("--puerto", type=int, default=8000)
     parser.add_argument("--sin-ventana", action="store_true")
-    parser.add_argument("--tunnel", action="store_true", help="Arranca cloudflared con el token del .env")
     parser.add_argument(
         "--conectar", nargs="?", const="pedir", metavar="IP_PUERTO",
         help="Modo estacion. Sin argumento: pide la IP. Con argumento: conecta directo.",
@@ -538,39 +537,7 @@ def main():
 
 
 
-def _arrancar_tunnel(token):
-    """Arranca cloudflared en background con el token dado."""
-    import os, subprocess
-    if not token:
-        return
-    exe = ""
-    for p in [r"C:\Program Files (x86)\cloudflared\cloudflared.exe",
-              r"C:\Program Files\cloudflared\cloudflared.exe"]:
-        if os.path.exists(p):
-            exe = p; break
-    if not exe:
-        # usar copia local en ProgramData (Plan B del instalador)
-        pd = os.environ.get("ProgramData", "")
-        local = os.path.join(pd, "OdontoClin", "cloudflared.exe") if pd else ""
-        if local and os.path.exists(local):
-            exe = local
-    if exe:
-        subprocess.Popen([exe, "tunnel", "run", "--token", token],
-                         creationflags=0x08000000 if sys.platform=="win32" else 0)
-
-
-def _maybe_start_tunnel(args):
-    import os
-    if not args.tunnel:
-        return
-    token = os.environ.get("CLOUDFLARED_TUNNEL_TOKEN", "") or os.environ.get("TUNNEL_TOKEN", "")
-    if token:
-        _arrancar_tunnel(token)
-
 if __name__ == "__main__":
-    import sys
-    args, _ = parser.parse_known_args()
-    _maybe_start_tunnel(args)
     try:
         main()
     except Exception:
