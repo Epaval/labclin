@@ -47,6 +47,15 @@ var
   IpPage: TInputQueryWizardPage;
   RolSeleccionado: String;
 
+
+function InitializeSetup(): Boolean;
+begin
+  { En modo silencioso (/VERYSILENT) no hay wizard: defaultear a servidor }
+  if WizardSilent then
+    RolSeleccionado := 'servidor';
+  Result := True;
+end;
+
 procedure InitializeWizard();
 begin
   RolPage := CreateInputOptionPage(wpSelectDir,
