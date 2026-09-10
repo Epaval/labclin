@@ -1,11 +1,14 @@
+#ifndef MyAppVersion
+#define MyAppVersion "0.0.1"
+#endif
 [Setup]
 AppName=Lab Clínico
-AppVersion=0.0.58
+AppVersion={#MyAppVersion}
 AppPublisher=Tu Laboratorio Software
 DefaultDirName={autopf}\LabClinico
 DefaultGroupName=Lab Clínico
 OutputDir=instalador
-OutputBaseFilename=LabClinico-Setup-0.0.58
+OutputBaseFilename=LabClinico-Setup-{#MyAppVersion}
 Compression=lzma2/ultra64
 SolidCompression=yes
 PrivilegesRequired=lowest

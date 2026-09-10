@@ -1,9 +1,12 @@
-name: Build Windows Installer
+name: Build LabClin Windows Installer
 
 on:
   push:
     tags: ["v*"]
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -22,21 +25,40 @@ jobs:
           pip install pyinstaller
 
       - name: Static files
+        env:
+          LABCLIN_MODO: escritorio
+          DJANGO_SECRET_KEY: dummy-key-for-build
         run: |
-          $env:LABCLIN_MODO="escritorio"
           python manage.py collectstatic --noinput
 
       - name: Compilar exe
         run: pyinstaller labclin.spec --noconfirm
 
       - name: Compilar instalador
+        shell: pwsh
         run: |
           $iscc = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
           if (-not (Test-Path $iscc)) { choco install innosetup -y }
-          & $iscc installer.iss
+          $ver = $env:GITHUB_REF_NAME -replace '^v',''
+          & $iscc installer.iss /DMyAppVersion=$ver
 
-      - name: Subir instalador
-        uses: actions/upload-artifact@v4
+      - name: Renombrar asset a LabClinico-Setup-vVERSION.exe
+        shell: pwsh
+        run: |
+          $ver = $env:GITHUB_REF_NAME -replace '^v',''
+          $src = Get-ChildItem -Path instalador -Filter "LabClinico-Setup*.exe" | Select-Object -First 1
+          if ($src) {
+            $newName = "LabClinico-Setup-$ver.exe"
+            Rename-Item $src.FullName $newName
+            Write-Host "Asset: instalador\$newName"
+          } else {
+            Write-Host "⚠️ No se encontro el exe en instalador/"
+            Get-ChildItem instalador
+          }
+
+      - name: Publicar Release con el instalador
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
         with:
-          name: LabClinico-Setup
-          path: instalador/*.exe
+          files: instalador/LabClinico-Setup-*.exe
+          generate_release_notes: true
