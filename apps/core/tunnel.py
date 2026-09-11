@@ -1,5 +1,5 @@
-"""Monitor del tunel Cloudflare con cache de 5 min."""
-import subprocess, sys, time
+"""Monitor del tunel Cloudflare con cache de 5 min (sin dependencias externas)."""
+import subprocess, sys, time, urllib.request
 from django.conf import settings
 from django.core.cache import cache
 
@@ -20,7 +20,6 @@ def _proceso_corriendo():
 
 
 def tunnel_status(force=False):
-    import requests as _rq
     url = getattr(settings, "TUNNEL_URL", None)
     if not url:
         return {"estado": "desactivado", "url": "", "proc": False, "remoto": False, "ts": 0}
@@ -30,8 +29,10 @@ def tunnel_status(force=False):
     proc = _proceso_corriendo()
     remoto = False
     try:
-        r = _rq.get(url + "/accounts/login/", timeout=8, allow_redirects=True)
-        remoto = 200 <= r.status_code < 400
+        req = urllib.request.Request(url + "/accounts/login/",
+                                     headers={"User-Agent": "tunnel-monitor"})
+        with urllib.request.urlopen(req, timeout=8) as r:
+            remoto = 200 <= r.status < 400
     except Exception:
         remoto = False
     if proc and remoto:
